@@ -26,10 +26,31 @@ public class AdminController {
 
     private final IAdminService adminService;
 
+    /**
+     * @Author: Kay
+     * @date:   2025/11/16 16:20
+     */
     @PostMapping("/register")
     @Operation(summary = "管理员注册")
     public Result register(@RequestBody @Valid AdminDTO adminDTO) {
         log.info("管理员注册：{}",adminDTO);
         return adminService.register(adminDTO);
     }
+
+    /**
+     * @Author: Kay
+     * @date:   2025/11/16 16:22
+     */
+    @PostMapping("/login")
+    public Result login(@RequestBody @Valid AdminDTO adminDTO) {
+        log.info("管理员登录：{}",adminDTO);
+        return adminService.login(adminDTO);
+    }
+
+
+
+
+
+
+
 }

@@ -14,4 +14,5 @@ public interface IAdminService extends IService<Admin> {
     Result register(AdminDTO adminDTO);
 
 
+    Result login(AdminDTO adminDTO);
 }
