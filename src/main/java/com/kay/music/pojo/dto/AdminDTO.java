@@ -31,8 +31,8 @@ public class AdminDTO implements Serializable {
 
     // 密码不能为空、不能全是空格
     @NotBlank(message = MessageConstant.PASSWORD + MessageConstant.NOT_NULL)
-    // 密码格式：3-18 位数字、字母、符号的任意两种组合
-    @Pattern(regexp = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\\W]{3,18}$", message = MessageConstant.PASSWORD + MessageConstant.FORMAT_ERROR)
-    @Schema(description = "管理员密码（3-18位，两种字符类型组合）", example = "123456")
+    // 密码格式：3~16 位，只能由 字母、数字、下划线、连字符 组成。
+    @Pattern(regexp = "^[a-zA-Z0-9_-]{3,18}$", message = MessageConstant.PASSWORD + MessageConstant.FORMAT_ERROR)
+    @Schema(description = "管理员密码（3-18位 字母/数字/下划线/连字符）", example = "123456")
     private String password;
 }

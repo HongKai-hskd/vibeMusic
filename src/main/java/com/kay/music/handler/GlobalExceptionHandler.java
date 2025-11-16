@@ -1,4 +1,4 @@
-package handler;
+package com.kay.music.handler;
 
 import com.kay.music.result.Result;
 import lombok.extern.slf4j.Slf4j;
