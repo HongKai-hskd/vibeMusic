@@ -93,4 +93,18 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         }
         return Result.error(MessageConstant.PASSWORD + MessageConstant.ERROR);
     }
+
+    /**
+     * @Author: Kay
+     * @date:   2025/11/16 16:59
+     */
+    @Override
+    public Result logout(String token) {
+        // 注销 token
+        Boolean res = stringRedisTemplate.delete(token);
+        if ( res != null && res ) {
+            return Result.success(MessageConstant.LOGOUT + MessageConstant.SUCCESS);
+        }
+        return Result.error(MessageConstant.LOGOUT + MessageConstant.FAILED);
+    }
 }

@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Kay
@@ -42,9 +39,22 @@ public class AdminController {
      * @date:   2025/11/16 16:22
      */
     @PostMapping("/login")
+    @Operation(summary = "管理员登录")
     public Result login(@RequestBody @Valid AdminDTO adminDTO) {
         log.info("管理员登录：{}",adminDTO);
         return adminService.login(adminDTO);
+    }
+
+    /**
+     * @Author: Kay
+     * @date:   2025/11/16 16:55
+     */
+    @PostMapping("/logout")
+    @Operation(summary = "管理员退出登录")
+    // 从 HTTP 请求的「请求头（Request Header）」中，提取名为 Authorization 的字段值
+    public Result logout(@RequestHeader("Authorization") String token ) {
+        log.info("管理员退出登录：{}",token);
+        return adminService.logout(token);
     }
 
 

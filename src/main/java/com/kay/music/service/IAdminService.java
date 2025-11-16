@@ -15,4 +15,6 @@ public interface IAdminService extends IService<Admin> {
 
 
     Result login(AdminDTO adminDTO);
+
+    Result logout(String token);
 }
