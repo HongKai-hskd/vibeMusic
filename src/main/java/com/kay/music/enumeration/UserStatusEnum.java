@@ -13,7 +13,7 @@ public enum UserStatusEnum {
     ENABLE(0, "启用"),
     DISABLE(1, "禁用");
 
-    @EnumValue
+    @EnumValue // 指定枚举类中与数据库字段对应的 “映射字段”
     private final Integer id;
     private final String userStatus;
 
