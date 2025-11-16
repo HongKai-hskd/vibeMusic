@@ -26,6 +26,29 @@ mybatis-plus:
       table-prefix: tb_  # 表名前缀为tb_，表名为前缀连接类名（小写）
 
 
+# 定义角色和路径权限的映射关系
+role-path-permissions:
+  permissions:
+    ROLE_ADMIN:
+      - "/admin/"
+      - "/playlist/"
+      - "/artist/"
+      - "/song/"
+      - "/favorite/"
+      - "/comment/"
+      - "/banner/"
+      - "/feedback/"
+    ROLE_USER:
+      - "/user/"
+      - "/playlist/"
+      - "/artist/"
+      - "/song/"
+      - "/favorite/"
+      - "/comment/"
+      - "/banner/"
+      - "/feedback/"
+
+
 # springdoc-openapi项目配置
 springdoc:
   swagger-ui:

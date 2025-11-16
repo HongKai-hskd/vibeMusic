@@ -3,6 +3,7 @@ package com.kay.music.controller;
 import com.kay.music.pojo.dto.AdminDTO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
+import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -55,6 +56,18 @@ public class AdminController {
     public Result logout(@RequestHeader("Authorization") String token ) {
         log.info("管理员退出登录：{}",token);
         return adminService.logout(token);
+    }
+
+    /**
+     * @Description: 测试 ThreadLocalUtil
+     * @Author: Kay
+     * @date: 2025/11/16 17:53
+     */
+    @GetMapping("/test")
+    @Operation(summary = "测试 ThreadLocalUtil ")
+    public Result test(){
+        log.info("ThreadLocal：{}",ThreadLocalUtil.get().toString());
+        return Result.success("ThreadLocal：" + ThreadLocalUtil.get().toString());
     }
 
 

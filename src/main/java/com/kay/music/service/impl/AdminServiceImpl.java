@@ -11,6 +11,7 @@ import com.kay.music.pojo.entity.Admin;
 import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
 import com.kay.music.utils.JwtUtil;
+import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,7 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
             claims.put(JwtClaimsConstant.ADMIN_ID , admin.getAdminId());
             claims.put(JwtClaimsConstant.USERNAME , admin.getUsername());
             String token = JwtUtil.generateToken(claims);
-
+            // TODO 这里是直接用 token 作为键的，这样并不好，一个用户可以在redis 存多个token ， 应该是使用 userId或者是 AdminId之类的，这样能确保唯一
             // 2.2 将 token 存入 redis
             stringRedisTemplate.opsForValue().set(token, token , 6 , TimeUnit.HOURS);
 
@@ -100,6 +101,13 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
      */
     @Override
     public Result logout(String token) {
+
+        // 从 ThreadLocal 中拿当前用户信息
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        if (claims == null) {
+            return Result.error(MessageConstant.NOT_LOGIN);
+        }
+
         // 注销 token
         Boolean res = stringRedisTemplate.delete(token);
         if ( res != null && res ) {
