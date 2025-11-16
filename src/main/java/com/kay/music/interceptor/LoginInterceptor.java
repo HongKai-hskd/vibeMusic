@@ -58,6 +58,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         String path = request.getRequestURI();
 
         // 3. 匹配“无需登录也能访问”的公开接口
+        // TODO 这里的 “无需登录也能访问”的公开接口 ， 和 WebConfig 中的 excludePathPatterns 感觉有些重复
         // 获取 Spring 的 PathMatcher 实例
         PathMatcher pathMatcher = new AntPathMatcher();
 
