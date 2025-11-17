@@ -9,6 +9,8 @@ import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 
+import java.util.List;
+
 /**
  * @author Kay
  * @date 2025/11/17 18:05
@@ -25,4 +27,6 @@ public interface IUserService extends IService<User> {
     Result updateUserStatus(Long userId, Integer userStatus);
 
     Result deleteUser(Long userId);
+
+    Result deleteUsers(List<Long> userIds);
 }

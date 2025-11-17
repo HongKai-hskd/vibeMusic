@@ -11,11 +11,16 @@ import com.kay.music.service.IAdminService;
 import com.kay.music.service.IUserService;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Kay
@@ -150,6 +155,19 @@ public class AdminController {
     @Operation(summary = "删除用户")
     public Result deleteUser(@PathVariable("id") Long userId) {
         return userService.deleteUser(userId);
+    }
+
+    /**
+     * @Description: 批量删除用户
+     * @Author: Kay
+     * @date:   2025/11/17 20:46
+     */
+    @DeleteMapping("/deleteUsers")
+    @Operation(summary = "批量删除用户")
+    // 前端传的时候直接传 ： [2, 3] 就可以了
+    public Result deleteUsers(@RequestBody List<Long> userIds) {
+        log.info("批量删除用户：{}" , userIds);
+        return userService.deleteUsers(userIds);
     }
 
 }
