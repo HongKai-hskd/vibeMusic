@@ -29,4 +29,6 @@ public interface IUserService extends IService<User> {
     Result deleteUser(Long userId);
 
     Result deleteUsers(List<Long> userIds);
+
+    Result sendVerificationCode(String email);
 }

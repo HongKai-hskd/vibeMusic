@@ -89,6 +89,12 @@
             <version>4.4.0</version>
         </dependency>
 
+        <!--java mail依赖-->
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+        </dependency>
+
 
 
     </dependencies>

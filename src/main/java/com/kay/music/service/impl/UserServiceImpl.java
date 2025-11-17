@@ -15,6 +15,7 @@ import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
+import com.kay.music.service.EmailService;
 import com.kay.music.service.IUserService;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ import java.util.List;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     private final UserMapper userMapper;
-
+    private final EmailService emailService;
 
     /**
      * @Description: 获取所有用户数量
@@ -258,5 +259,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
         }
         return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 发送验证码
+     * @Author: Kay
+     * @date:   2025/11/17 21:04
+     */
+    @Override
+    public Result sendVerificationCode(String email) {
+
+        String verificationCode = emailService.sendVerificationCodeEmail(email);
+        if (verificationCode == null) {
+            return Result.error(MessageConstant.EMAIL_SEND_FAILED);
+        }
+        // TODO
+        return null;
     }
 }
