@@ -3,6 +3,7 @@ package com.kay.music.controller;
 import com.kay.music.pojo.dto.AdminDTO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
+import com.kay.music.service.IUserService;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final IAdminService adminService;
+    private final IUserService userService;
 
     /**
      * @Author: Kay
@@ -72,8 +74,17 @@ public class AdminController {
 
     /**********************************************************************************************/
 
-
-
+    /**
+     * @Description: 获取所有用户数量
+     * @return: Result<Long>  用户数量
+     * @Author: Kay
+     * @date:   2025/11/17 18:09
+     */
+    @Operation(summary = "获取所有用户数量")
+    @GetMapping("/getAllUsersCount")
+    public Result<Long> getAllUsersCount() {
+        return userService.getAllUsersCount();
+    }
 
 
 

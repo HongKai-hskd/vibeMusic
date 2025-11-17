@@ -19,6 +19,14 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/**") // 拦截所有请求
                 .excludePathPatterns(
+                        // ------------ knife4j--------------
+                        "/doc.html",          //  Knife4j 首页
+                        "/webjars/**",        //  静态资源（CSS/JS/图标）
+                        "/v3/api-docs/**",    //  OpenAPI 3.0 接口数据
+                        "/swagger-resources/**", //  Swagger 资源配置（兼容旧版本）
+                        "/swagger-ui.html",   //  原生 Swagger 首页（备用）
+                        "/knife4j/**",         //  Knife4j 增强功能（如调试回调）
+                        // -------------------------------------
                         "/admin/login", "/admin/logout", "/admin/register",
                         "/user/login", "/user/logout", "/user/register",
                         "/user/sendVerificationCode", "/user/resetUserPassword",
