@@ -25,6 +25,9 @@ mybatis-plus:
     db-config: # 数据库配置
       table-prefix: tb_  # 表名前缀为tb_，表名为前缀连接类名（小写）
 
+jwt:
+  secret_key: "VIBE_MUSIC"
+  expiration_time: 168          # 过期时间 （h）
 
 # 定义角色和路径权限的映射关系
 role-path-permissions:
