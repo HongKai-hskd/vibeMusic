@@ -231,4 +231,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
+
+    /**
+     * @Description: 删除用户
+     * @Author: Kay
+     * @date:   2025/11/17 20:43
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result deleteUser(Long userId) {
+        if (userMapper.deleteById(userId) == 0) {
+            return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
 }

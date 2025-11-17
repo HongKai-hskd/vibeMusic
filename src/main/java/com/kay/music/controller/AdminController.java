@@ -140,6 +140,16 @@ public class AdminController {
         return userService.updateUserStatus(userId, userStatus);
     }
 
-
+    /**
+     * @Description: 删除用户
+     * @param: userId
+     * @Author: Kay
+     * @date:   2025/11/17 20:42
+     */
+    @DeleteMapping("/deleteUser/{id}")
+    @Operation(summary = "删除用户")
+    public Result deleteUser(@PathVariable("id") Long userId) {
+        return userService.deleteUser(userId);
+    }
 
 }
