@@ -1,6 +1,7 @@
 package com.kay.music.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.kay.music.pojo.dto.UserAddDTO;
 import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
@@ -15,4 +16,6 @@ public interface IUserService extends IService<User> {
     Result<Long> getAllUsersCount();
 
     Result<PageResult<UserManagementVO>> getAllUsers(UserSearchDTO userSearchDTO);
+
+    Result addUser(UserAddDTO userAddDTO);
 }

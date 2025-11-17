@@ -1,6 +1,7 @@
 package com.kay.music.controller;
 
 import com.kay.music.pojo.dto.AdminDTO;
+import com.kay.music.pojo.dto.UserAddDTO;
 import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
@@ -100,6 +101,18 @@ public class AdminController {
         return userService.getAllUsers(userSearchDTO);
     }
 
+    /**
+     * @Description: 新增用户
+     * @param: userAddDTO 用户注册信息
+     * @Author: Kay
+     * @date:   2025/11/17 19:31
+     */
+    @PostMapping("/addUser")
+    @Operation(summary = "新增用户")
+    public Result addUser(@RequestBody @Valid UserAddDTO userAddDTO) {
+        log.info("新增用户:{}",userAddDTO);
+        return userService.addUser(userAddDTO);
+    }
 
 
 
