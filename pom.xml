@@ -61,6 +61,13 @@
             <version>3.5.9</version>
         </dependency>
 
+        <!--mybatis-plus分页插件依赖-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+            <version>3.5.9</version>
+        </dependency>
+
 
         <!--validation依赖-->
         <dependency>

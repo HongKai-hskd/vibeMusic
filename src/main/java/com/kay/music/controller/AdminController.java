@@ -1,6 +1,9 @@
 package com.kay.music.controller;
 
 import com.kay.music.pojo.dto.AdminDTO;
+import com.kay.music.pojo.dto.UserSearchDTO;
+import com.kay.music.pojo.vo.UserManagementVO;
+import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
 import com.kay.music.service.IUserService;
@@ -85,6 +88,20 @@ public class AdminController {
     public Result<Long> getAllUsersCount() {
         return userService.getAllUsersCount();
     }
+
+    /**
+     * @Param:  UserSearchDTO 用户搜索条件
+     * @Author: Kay
+     * @date:   2025/11/17 19:09
+     */
+    @Operation(summary = "获取所有用户信息")
+    @PostMapping("/getAllUsers")
+    public Result<PageResult<UserManagementVO>> getAllUsers(@RequestBody UserSearchDTO userSearchDTO){
+        return userService.getAllUsers(userSearchDTO);
+    }
+
+
+
 
 
 

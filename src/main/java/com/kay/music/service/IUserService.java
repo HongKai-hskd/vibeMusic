@@ -1,7 +1,10 @@
 package com.kay.music.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.entity.User;
+import com.kay.music.pojo.vo.UserManagementVO;
+import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 
 /**
@@ -10,4 +13,6 @@ import com.kay.music.result.Result;
  */
 public interface IUserService extends IService<User> {
     Result<Long> getAllUsersCount();
+
+    Result<PageResult<UserManagementVO>> getAllUsers(UserSearchDTO userSearchDTO);
 }
