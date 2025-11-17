@@ -82,6 +82,6 @@ public class User implements Serializable {
     private LocalDateTime updateTime;
 
     @TableField("status")
-    @Schema(description = "用户状态：0-启用，1-禁用")
+    @Schema(description = "用户状态：0-启用，1-禁用" , example = "0")
     private UserStatusEnum userStatus;
 }
