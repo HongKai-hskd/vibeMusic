@@ -5,15 +5,18 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
+import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.enumeration.UserStatusEnum;
 import com.kay.music.mapper.UserMapper;
 import com.kay.music.pojo.dto.UserAddDTO;
+import com.kay.music.pojo.dto.UserDTO;
 import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
+import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
@@ -146,5 +149,57 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.error(MessageConstant.ADD + MessageConstant.FAILED);
         }
         return Result.success(MessageConstant.ADD + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 更新用户
+     * @return: Result message
+     * @Author: Kay
+     * @date:   2025/11/17 20:01
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result updateUser(UserDTO userDTO) {
+        Long userId = userDTO.getUserId();
+
+        // 0. 校验是否有权限进行修改 （ Admin 还有 自己 有权限修改自己的信息） （Fail Fast 方式）
+        String role = ThreadLocalUtil.getRole();
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        Long updateUserId = userDTO.getUserId();
+
+        boolean isAdmin = RoleEnum.ADMIN.getRole().equals(role);
+        boolean isSelf = updateUserId.equals(currentUserId);
+
+        // 不满足任一合法条件：管理员 OR 本人
+        if (!isAdmin && !isSelf) {
+            return Result.error(MessageConstant.NOT_PERMISSION_UPDATE);
+        }
+
+        // 1.1 查询 名字 是否被占用
+        User userByUsername = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userDTO.getUsername()));
+        if (userByUsername != null && !userByUsername.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.USERNAME + MessageConstant.ALREADY_EXISTS);
+        }
+        // 1.2 查询 电话 是否被占用
+        User userByPhone = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getPhone, userDTO.getPhone()));
+        if (userByPhone != null && !userByPhone.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.PHONE + MessageConstant.ALREADY_EXISTS);
+        }
+        // 1.3 查询 邮箱 是否被占用
+        User userByEmail = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, userDTO.getEmail()));
+        if (userByEmail != null && !userByEmail.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.EMAIL + MessageConstant.ALREADY_EXISTS);
+        }
+
+        // 2. 补全信息
+        User user = new User();
+        BeanUtils.copyProperties(userDTO, user);
+        user.setUpdateTime(LocalDateTime.now());
+
+        // 3. 插入修改结果
+        if (userMapper.updateById(user) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
 }

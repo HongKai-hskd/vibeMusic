@@ -2,6 +2,7 @@ package com.kay.music.controller;
 
 import com.kay.music.pojo.dto.AdminDTO;
 import com.kay.music.pojo.dto.UserAddDTO;
+import com.kay.music.pojo.dto.UserDTO;
 import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
@@ -114,7 +115,17 @@ public class AdminController {
         return userService.addUser(userAddDTO);
     }
 
-
+    /**
+     * @Description: 更新用户信息
+     * @Author: Kay
+     * @date:   2025/11/17 20:00
+     */
+    @PutMapping("/updateUser")
+    @Operation(summary = "修改用户信息")
+    public Result updateUser(@RequestBody @Valid UserDTO userDTO) {
+        log.info("更新用户：{}",userDTO);
+        return userService.updateUser(userDTO);
+    }
 
 
 
