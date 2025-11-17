@@ -202,4 +202,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
+
+    /**
+     * @Description: 更新用户状态
+     * @Author: Kay
+     * @date:   2025/11/17 20:35
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result updateUserStatus(Long userId, Integer userStatus) {
+        // 1. 确保用户状态有效 , 并封装成 枚举类型
+        UserStatusEnum statusEnum;
+        if (userStatus == 0) {
+            statusEnum = UserStatusEnum.ENABLE;
+        } else if (userStatus == 1) {
+            statusEnum = UserStatusEnum.DISABLE;
+        } else {
+            return Result.error(MessageConstant.USER_STATUS_INVALID);
+        }
+
+        // 2. 更新用户状态
+        User user = new User();
+        user.setUserStatus(statusEnum).setUpdateTime(LocalDateTime.now());
+
+        int rows = userMapper.update(user, new LambdaQueryWrapper<User>().eq(User::getUserId, userId));
+        if (rows == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
 }

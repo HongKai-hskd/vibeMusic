@@ -127,6 +127,19 @@ public class AdminController {
         return userService.updateUser(userDTO);
     }
 
+    /**
+     * @Description: 更新用户状态
+     * @param: userId
+     * @param: userStatus 用户状态
+     * @Author: Kay
+     * @date:   2025/11/17 20:34
+     */
+    @PatchMapping("/updateUserStatus/{id}/{status}")
+    @Operation(summary = "更新用户状态")
+    public Result updateUserStatus(@PathVariable("id") Long userId, @PathVariable("status") Integer userStatus) {
+        return userService.updateUserStatus(userId, userStatus);
+    }
+
 
 
 }

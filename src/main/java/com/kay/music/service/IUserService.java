@@ -21,4 +21,6 @@ public interface IUserService extends IService<User> {
     Result addUser(UserAddDTO userAddDTO);
 
     Result updateUser(UserDTO userDTO);
+
+    Result updateUserStatus(Long userId, Integer userStatus);
 }
