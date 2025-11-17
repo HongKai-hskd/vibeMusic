@@ -26,9 +26,6 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
-    // 设置 JWT 的过期时间
-    @Value("${jwt.expiration_time}")
-    private Long EXPIRATION_HOUR;
 
     /**
      * 自定义 Jackson2JsonRedisSerializer 配置
@@ -66,7 +63,7 @@ public class RedisConfig {
 
         // 配置缓存的序列化方式
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(EXPIRATION_HOUR)) // 缓存过期时间 6 小时 , 如果直接使用的注解的话，默认就是按这个过期时间
+                .entryTtl(Duration.ofHours(6)) // 缓存过期时间 6 小时 , 如果直接使用的注解的话，默认就是按这个过期时间
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(stringSerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer));
 

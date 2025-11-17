@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.Map;
@@ -13,22 +14,14 @@ import java.util.Map;
  * @Author: Kay
  * @date:   2025/11/16 16:38
  */
+@Component
 public class JwtUtil {
 
     @Value("${jwt.secret_key}")
-    private String secretKey;
+    private String SECRET_KEY;
 
     @Value("${jwt.expiration_time}")
-    private Long expirationHour;
-
-    private static String SECRET_KEY;
-    private static Long EXPIRATION_TIME;
-
-    @PostConstruct
-    public void init() {
-        SECRET_KEY = secretKey;
-        EXPIRATION_TIME = expirationHour * 60 * 60 * 1000;
-    }
+    private Long EXPIRATION_HOUR;
 
     /**
      * 生成 JWT token
@@ -36,10 +29,12 @@ public class JwtUtil {
      * @param claims 自定义的业务数据
      * @return JWT token
      */
-    public static String generateToken(Map<String, Object> claims) {
+    public String generateToken(Map<String, Object> claims) {
+        long expireMillis = EXPIRATION_HOUR * 60 * 60 * 1000;
+
         return JWT.create()
                 .withClaim("claims", claims) // 自定义的业务数据
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // 设置过期时间
+                .withExpiresAt(new Date(System.currentTimeMillis() + expireMillis)) // 设置过期时间
                 .sign(Algorithm.HMAC256(SECRET_KEY)); // 使用 HMAC256 算法加密
     }
 
@@ -49,7 +44,7 @@ public class JwtUtil {
      * @param token JWT token
      * @return 自定义的业务数据
      */
-    public static Map<String, Object> parseToken(String token) {
+    public Map<String, Object> parseToken(String token) {
         return JWT.require(Algorithm.HMAC256(SECRET_KEY))
                 .build()
                 .verify(token)

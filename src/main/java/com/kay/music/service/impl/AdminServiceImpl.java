@@ -13,6 +13,7 @@ import com.kay.music.service.IAdminService;
 import com.kay.music.utils.JwtUtil;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -32,6 +33,10 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
 
     private final AdminMapper adminMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final JwtUtil jwtUtil;
+
+    @Value("${jwt.expiration_time}")
+    private Long EXPIRATION_HOUR;
 
     /**
      * @Description: 管理员注册
@@ -84,10 +89,10 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
             claims.put(JwtClaimsConstant.ROLE, RoleEnum.ADMIN.getRole());
             claims.put(JwtClaimsConstant.ADMIN_ID , admin.getAdminId());
             claims.put(JwtClaimsConstant.USERNAME , admin.getUsername());
-            String token = JwtUtil.generateToken(claims);
+            String token = jwtUtil.generateToken(claims);
             // TODO 这里是直接用 token 作为键的，这样并不好，一个用户可以在redis 存多个token ， 应该是使用 userId或者是 AdminId之类的，这样能确保唯一
             // 2.2 将 token 存入 redis
-            stringRedisTemplate.opsForValue().set(token, token , 6 , TimeUnit.HOURS);
+            stringRedisTemplate.opsForValue().set(token, token , EXPIRATION_HOUR , TimeUnit.HOURS);
 
             // 2.3 返回
             return Result.success(MessageConstant.LOGIN + MessageConstant.SUCCESS , token);

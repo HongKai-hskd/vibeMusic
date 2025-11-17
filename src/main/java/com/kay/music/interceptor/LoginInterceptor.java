@@ -10,6 +10,7 @@ import com.kay.music.utils.JwtUtil;
 import com.kay.music.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -28,12 +29,12 @@ import java.util.Map;
  * @date:   2025/11/16 17:10
  */
 @Component
+@RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    private RolePermissionManager rolePermissionManager;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RolePermissionManager rolePermissionManager;
+    private final JwtUtil jwtUtil;
 
     public void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
@@ -94,7 +95,7 @@ public class LoginInterceptor implements HandlerInterceptor {
                 throw new RuntimeException();
             }
             // 6.  解析 JWT，获取角色信息
-            Map<String, Object> claims = JwtUtil.parseToken(token);
+            Map<String, Object> claims = jwtUtil.parseToken(token);
             String role = (String) claims.get(JwtClaimsConstant.ROLE);
             String requestURI = request.getRequestURI();
 
