@@ -22,27 +22,27 @@ spring:
 
   # 配置邮件服务
   mail:
-    # 配置邮箱账户和密码
-    host: smtp.example.com # 修改你的 SMTP 服务器地址
-    username: your-email@example.com # 修改你的邮箱账号
-    password: YOUR_EMAIL_APP_PASSWORD # 修改你的邮箱应用密码或授权码
+    host: smtp.qq.com
+    port: 587
+    username: 3095438615@qq.com
+    password: kaodyhhprkrfdeaf   # QQ 邮箱授权码
     protocol: smtp
+    default-encoding: UTF-8
     properties:
       mail:
+        # debug: true
         smtp:
           auth: true
           starttls:
             enable: true
             required: true
           ssl:
-            enable: true
-          socketFactory:
-            port: 465
-            class: javax.net.ssl.SSLSocketFactory
+            enable: false
           # 邮件服务超时时间配置
           connectiontimeout: 5000
-          timeout: 3000
+          timeout: 5000
           writetimeout: 5000
+
 
 # 配置 mybatis-plus
 mybatis-plus:

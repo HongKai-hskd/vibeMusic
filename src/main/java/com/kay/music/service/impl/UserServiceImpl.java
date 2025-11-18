@@ -23,11 +23,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Kay
@@ -41,6 +43,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * @Description: 获取所有用户数量
@@ -273,7 +276,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (verificationCode == null) {
             return Result.error(MessageConstant.EMAIL_SEND_FAILED);
         }
-        // TODO
-        return null;
+        // 将验证码存储到Redis中，设置过期时间为5分钟
+        stringRedisTemplate.opsForValue().set("verificationCode:" + email, verificationCode, 5, TimeUnit.MINUTES);
+        return Result.success(MessageConstant.EMAIL_SEND_SUCCESS);
     }
 }
