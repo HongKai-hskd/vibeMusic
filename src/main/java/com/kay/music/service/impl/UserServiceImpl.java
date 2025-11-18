@@ -10,6 +10,7 @@ import com.kay.music.enumeration.UserStatusEnum;
 import com.kay.music.mapper.UserMapper;
 import com.kay.music.pojo.dto.UserAddDTO;
 import com.kay.music.pojo.dto.UserDTO;
+import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.pojo.dto.UserSearchDTO;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
@@ -279,5 +280,56 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 将验证码存储到Redis中，设置过期时间为5分钟
         stringRedisTemplate.opsForValue().set("verificationCode:" + email, verificationCode, 5, TimeUnit.MINUTES);
         return Result.success(MessageConstant.EMAIL_SEND_SUCCESS);
+    }
+
+    /**
+     * @Description: 验证验证码
+     * @param: email
+     * @param: verificationCode
+     * @Author: Kay
+     * @date:   2025/11/18 23:45
+     */
+    @Override
+    public boolean verifyVerificationCode(String email, String verificationCode) {
+        String storedCode = stringRedisTemplate.opsForValue().get("verificationCode:" + email);
+        return storedCode != null && storedCode.equals(verificationCode);
+    }
+
+    /**
+     * @Description: 用户注册
+     * @Author: Kay
+     * @date:   2025/11/18 23:48
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result register(UserRegisterDTO userRegisterDTO) {
+        // 能到这里， 说明验证码验证完了，并且是正确的
+        // 1. 删除 redis 存的 验证码
+        stringRedisTemplate.delete("verificationCode:" + userRegisterDTO.getEmail());
+
+        // 2. 判断能否插入 -- username
+        User userByUsername = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userRegisterDTO.getUsername()));
+        if (userByUsername != null) {
+            return Result.error(MessageConstant.USERNAME + MessageConstant.ALREADY_EXISTS);
+        }
+        // 2. 判断能否插入 -- email
+        User userByEmail = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, userRegisterDTO.getEmail()));
+        if (userByEmail != null) {
+            return Result.error(MessageConstant.EMAIL + MessageConstant.ALREADY_EXISTS);
+        }
+        // 3. 获取加密后的密码
+        String passwordMD5 = DigestUtils.md5DigestAsHex(userRegisterDTO.getPassword().getBytes());
+        // 4. 封装 需要插入的 User
+        User user = new User().setUsername(userRegisterDTO.getUsername())
+                .setPassword(passwordMD5)
+                .setEmail(userRegisterDTO.getEmail())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateTime(LocalDateTime.now())
+                .setUserStatus(UserStatusEnum.ENABLE);
+        // 5. 插入数据
+        if (userMapper.insert(user) == 0) {
+            return Result.error(MessageConstant.REGISTER + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.REGISTER + MessageConstant.SUCCESS);
     }
 }

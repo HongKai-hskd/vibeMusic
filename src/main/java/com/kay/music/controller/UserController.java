@@ -1,16 +1,16 @@
 package com.kay.music.controller;
 
+import com.kay.music.constant.MessageConstant;
+import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Kay
@@ -38,4 +38,24 @@ public class UserController {
     public Result sendVerificationCode(@RequestParam @Email String email) {
         return userService.sendVerificationCode(email);
     }
+
+    /**
+     * @Description: 用户注册
+     * @Author: Kay
+     * @date:   2025/11/18 23:44
+     */
+    @Operation(summary = "用户注册")
+    @PostMapping("/register")
+    public Result register(@RequestBody @Valid UserRegisterDTO userRegisterDTO){
+        // 验证验证码是否正确
+        boolean isCodeValid = userService.verifyVerificationCode(userRegisterDTO.getEmail(), userRegisterDTO.getVerificationCode());
+        if (!isCodeValid) {
+            return Result.error(MessageConstant.VERIFICATION_CODE + MessageConstant.INVALID);
+        }
+        return userService.register(userRegisterDTO);
+    }
+
+
+
+
 }
