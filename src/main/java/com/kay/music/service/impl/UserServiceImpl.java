@@ -271,7 +271,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public Result sendVerificationCode(String email) {
-
+        // TODO 后期可以加一个判断逻辑，如果 redis 有对应的邮箱验证码，且还未过一分钟，则不能请求
         String verificationCode = emailService.sendVerificationCodeEmail(email);
         if (verificationCode == null) {
             return Result.error(MessageConstant.EMAIL_SEND_FAILED);
