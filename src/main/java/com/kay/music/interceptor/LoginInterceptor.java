@@ -11,7 +11,9 @@ import com.kay.music.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ import java.util.Map;
  * @date:   2025/11/16 17:10
  */
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
 
@@ -89,13 +92,32 @@ public class LoginInterceptor implements HandlerInterceptor {
             // 5. 校验 token 是否有效（Redis 校验）
             // 从redis中获取相同的token
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-            String redisToken = operations.get(token);
+            String redisToken;
+
+            try {
+                // 增加健壮性 ， 避免全部归为最后的异常处理
+                redisToken = operations.get(token);
+            } catch (RedisConnectionFailureException ex) {
+                log.error("Redis 连接失败，无法校验 token", ex);
+                sendErrorResponse(response, 500, "Redis 服务不可用，请联系管理员");
+                return false;
+            }
+
             if (redisToken == null) {
-                // token失效
-                throw new RuntimeException();
+                // Redis 里根本没有这个 token，说明会话真的过期了
+                sendErrorResponse(response, 401, MessageConstant.SESSION_EXPIRED);
+                return false;
             }
             // 6.  解析 JWT，获取角色信息
-            Map<String, Object> claims = jwtUtil.parseToken(token);
+            Map<String, Object> claims;
+            try{
+                claims = jwtUtil.parseToken(token);
+            } catch (Exception ex) {
+                // JWT 无效/过期等
+                log.warn("JWT 解析失败，token 无效", ex);
+                sendErrorResponse(response, 401, MessageConstant.SESSION_EXPIRED);
+                return false;
+            }
             String role = (String) claims.get(JwtClaimsConstant.ROLE);
             String requestURI = request.getRequestURI();
 
@@ -109,6 +131,8 @@ public class LoginInterceptor implements HandlerInterceptor {
                 return false;
             }
         } catch (Exception e) {
+            // 拦截器里其他未知异常，单独打个日志，返回服务器异常
+            log.error("权限拦截器发生未知异常", e);
             sendErrorResponse(response, 401, MessageConstant.SESSION_EXPIRED); // 令牌无效
             return false;
         }

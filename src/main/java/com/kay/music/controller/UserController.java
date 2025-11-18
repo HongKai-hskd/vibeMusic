@@ -2,6 +2,8 @@ package com.kay.music.controller;
 
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 @Slf4j
 @RequiredArgsConstructor
+@Tag(name = "用户管理接口")
 public class UserController {
 
     private final IUserService userService;
@@ -29,6 +32,7 @@ public class UserController {
      * @Author: Kay
      * @date:   2025/11/17 21:02
      */
+    @Operation(summary = "发送邮件验证码")
     @GetMapping("/sendVerificationCode")
     // @RequestParam 即 URL 中 ? 后面的键值对
     public Result sendVerificationCode(@RequestParam @Email String email) {
