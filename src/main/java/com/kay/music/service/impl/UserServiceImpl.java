@@ -538,5 +538,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.error(MessageConstant.LOGOUT + MessageConstant.FAILED);
     }
 
+    /**
+     * @Description: 注销账户
+     * @Author: Kay
+     * @date:   2025/11/19 23:19
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result deleteAccount() {
+        Long userId = ThreadLocalUtil.getUserId();
+        // 1. 查询用户信息
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return Result.error(MessageConstant.USER + MessageConstant.NOT_EXIST);
+        }
+        // 2. 删除头像
+        String userAvatar = user.getUserAvatar();
+        if (userAvatar != null && !userAvatar.isEmpty()) {
+            minioService.deleteFile(userAvatar);
+        }
+        // 3. 删除用户
+        if (userMapper.deleteById(userId) == 0) {
+            return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
+
 
 }

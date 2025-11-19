@@ -162,6 +162,17 @@ public class UserController {
         return userService.logout(token);
     }
 
+    /**
+     * @Description: 注销账号
+     * @Author: Kay
+     * @date:   2025/11/19 23:18
+     */
+    @Operation(summary = "注销账号")
+    @DeleteMapping("/deleteAccount")
+    public Result deleteAccount() {
+        return userService.deleteAccount();
+    }
+
 
 
 }

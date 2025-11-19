@@ -48,4 +48,6 @@ public interface IUserService extends IService<User> {
     Result resetUserPassword(UserResetPasswordDTO userResetPasswordDTO);
 
     Result logout(String token);
+
+    Result deleteAccount();
 }
