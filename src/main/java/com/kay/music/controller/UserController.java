@@ -7,6 +7,7 @@ import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
+import com.kay.music.service.MinioService;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Kay
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final IUserService userService;
+    private final MinioService minioService;
 
 
     /**
@@ -102,6 +105,19 @@ public class UserController {
     @PutMapping("/updateUserInfo")
     public Result updateUserInfo(@RequestBody @Valid UserDTO userDTO){
         return userService.updateUserInfo(userDTO);
+    }
+
+    /**
+     * @Description:
+     * @Author: Kay
+     * @date:   2025/11/19 21:26
+     */
+    @Operation(summary = "更新用户头像")
+    @PatchMapping("/updateUserAvatar")
+    public Result updateUserAvatar(@RequestParam("avatar") MultipartFile avatar){
+        String avatarUrl = minioService.uploadFile(avatar, "users");  // 上传到 users 目录
+//        return userService.updateUserAvatar(avatarUrl);
+        return null;
     }
 
 

@@ -53,6 +53,13 @@ mybatis-plus:
     db-config: # 数据库配置
       table-prefix: tb_  # 表名前缀为tb_，表名为前缀连接类名（小写）
 
+
+minio:
+  endpoint: http://localhost:9000 # 修改你的 MinIO 端点
+  accessKey: minioadmin # 修改你的 MinIO Access Key
+  secretKey: minioadmin # 修改你的 MinIO Secret Key
+  bucket: vibe-music-data # 确认 Bucket 名称与你创建的一致
+
 jwt:
   secret_key: "VIBE_MUSIC"
   expiration_time: 168          # 过期时间 （h）

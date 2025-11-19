@@ -95,6 +95,13 @@
             <artifactId>jakarta.mail</artifactId>
         </dependency>
 
+        <!--minio依赖-->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.9</version>
+        </dependency>
+
 
 
     </dependencies>
