@@ -16,6 +16,7 @@ import java.io.Serializable;
  * @date 2025/11/19 11:26
  */
 @Data
+@Schema(name = "UserLoginDTO", description = "用户登录DTO类实体")
 public class UserLoginDTO implements Serializable {
 
     @Serial

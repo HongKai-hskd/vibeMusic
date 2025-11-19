@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
+import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 
@@ -35,4 +36,6 @@ public interface IUserService extends IService<User> {
     Result register(UserRegisterDTO userRegisterDTO);
 
     Result login(UserLoginDTO userLoginDTO);
+
+    Result<UserVO> userInfo();
 }

@@ -12,6 +12,7 @@ import com.kay.music.mapper.UserMapper;
 import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
+import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.EmailService;
@@ -372,8 +373,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.error(MessageConstant.PASSWORD + MessageConstant.ERROR);
     }
 
-
-
+    /**
+     * @Description: 用户信息
+     * @Author: Kay
+     * @date:   2025/11/19 11:42
+     */
+    @Override
+    public Result<UserVO> userInfo() {
+        Long userId = ThreadLocalUtil.getUserId();
+        User user = userMapper.selectById(userId);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return Result.success(userVO);
+    }
 
 
 }

@@ -3,8 +3,10 @@ package com.kay.music.controller;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.pojo.dto.UserLoginDTO;
 import com.kay.music.pojo.dto.UserRegisterDTO;
+import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
+import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,6 +28,18 @@ public class UserController {
 
     private final IUserService userService;
 
+
+    /**
+     * @Description: 测试 ThreadLocalUtil
+     * @Author: Kay
+     * @date: 2025/11/16 17:53
+     */
+    @GetMapping("/test")
+    @Operation(summary = "测试 ThreadLocalUtil ")
+    public Result test(){
+        log.info("ThreadLocal：{}", ThreadLocalUtil.get().toString());
+        return Result.success("ThreadLocal：" + ThreadLocalUtil.get().toString());
+    }
 
     /**
      * @Description: 发送验证码
@@ -65,6 +79,17 @@ public class UserController {
     @PostMapping("/login")
     public Result login(@RequestBody @Valid UserLoginDTO userLoginDTO){
         return userService.login(userLoginDTO);
+    }
+
+    /**
+     * @Description: 获取用户信息
+     * @Author: Kay
+     * @date:   2025/11/19 11:39
+     */
+    @Operation(summary = "获取用户信息")
+    @GetMapping("/getUserInfo")
+    public Result<UserVO> getUserInfo() {
+        return userService.userInfo();
     }
 
 
