@@ -40,4 +40,6 @@ public interface IUserService extends IService<User> {
     Result<UserVO> userInfo();
 
     Result updateUserInfo(UserDTO userDTO);
+
+    Result updateUserAvatar(String avatarUrl);
 }

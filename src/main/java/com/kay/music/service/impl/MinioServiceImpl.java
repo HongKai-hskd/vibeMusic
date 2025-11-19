@@ -4,6 +4,7 @@ import com.kay.music.constant.MessageConstant;
 import com.kay.music.service.MinioService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,6 +64,32 @@ public class MinioServiceImpl implements MinioService {
 
         } catch (Exception e) {
             throw new RuntimeException(MessageConstant.FILE_UPLOAD + MessageConstant.FAILED + "：" + e.getMessage());
+        }
+    }
+
+    /**
+     * @Description: 删除文件
+     * @param: userAvatar
+     * @return: void
+     * @Author: Kay
+     * @date:   2025/11/19 21:32
+     */
+    @Override
+    public void deleteFile(String fileUrl) {
+        try {
+            // 解析 URL，获取文件路径
+            String filePath = fileUrl.replace(endpoint + "/" + bucketName + "/", "");
+
+            // 删除文件
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(filePath)
+                            .build()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("文件删除失败: " + e.getMessage());
         }
     }
 }

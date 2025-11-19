@@ -17,6 +17,7 @@ import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.EmailService;
 import com.kay.music.service.IUserService;
+import com.kay.music.service.MinioService;
 import com.kay.music.utils.JwtUtil;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final EmailService emailService;
     private final StringRedisTemplate stringRedisTemplate;
     private final JwtUtil jwtUtil;
+    private final MinioService minioService;
 
     @Value("${jwt.expiration_time}")
     private Long EXPIRATION_HOUR;
@@ -432,9 +434,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
 
-
-
-
+    /**
+     * @Description: 更新用户头像
+     * @Author: Kay
+     * @date:   2025/11/19 21:30
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result updateUserAvatar(String avatarUrl) {
+        Long userId = ThreadLocalUtil.getUserId();
+        // 1. 删除 旧头像
+        User user = userMapper.selectById(userId);
+        String userAvatar = user.getUserAvatar();
+        if (userAvatar != null && !userAvatar.isEmpty()) {
+            minioService.deleteFile(userAvatar);
+        }
+        // 2. 上传新头像
+        if (userMapper.update(new User().setUserAvatar(avatarUrl).setUpdateTime(LocalDateTime.now()),
+                new LambdaQueryWrapper<User>().eq(User::getUserId, userId)) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
 
 
 }

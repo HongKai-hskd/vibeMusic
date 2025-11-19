@@ -113,11 +113,10 @@ public class UserController {
      * @date:   2025/11/19 21:26
      */
     @Operation(summary = "更新用户头像")
-    @PatchMapping("/updateUserAvatar")
+    @PatchMapping("/updateUserAvatar")  // HTTP 请求方式之一：更新部分字段
     public Result updateUserAvatar(@RequestParam("avatar") MultipartFile avatar){
         String avatarUrl = minioService.uploadFile(avatar, "users");  // 上传到 users 目录
-//        return userService.updateUserAvatar(avatarUrl);
-        return null;
+        return userService.updateUserAvatar(avatarUrl);
     }
 
 
