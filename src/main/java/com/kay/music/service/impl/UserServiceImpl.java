@@ -4,20 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kay.music.constant.JwtClaimsConstant;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.enumeration.UserStatusEnum;
 import com.kay.music.mapper.UserMapper;
-import com.kay.music.pojo.dto.UserAddDTO;
-import com.kay.music.pojo.dto.UserDTO;
-import com.kay.music.pojo.dto.UserRegisterDTO;
-import com.kay.music.pojo.dto.UserSearchDTO;
+import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.EmailService;
 import com.kay.music.service.IUserService;
+import com.kay.music.utils.JwtUtil;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -29,7 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final JwtUtil jwtUtil;
 
     /**
      * @Description: 获取所有用户数量
@@ -332,4 +334,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         return Result.success(MessageConstant.REGISTER + MessageConstant.SUCCESS);
     }
+
+    /**
+     * @Description: 用户登录
+     * @Author: Kay
+     * @date:   2025/11/19 11:28
+     */
+    @Override
+    public Result login(UserLoginDTO userLoginDTO) {
+        // 1. 获取 匹配用户邮箱 的 用户
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, userLoginDTO.getEmail()));
+        // 2.1 判断是否存在
+        if ( user == null ) {
+            return Result.error(MessageConstant.EMAIL + MessageConstant.ERROR);
+        }
+        // 2.2 判断是否封禁
+        if (user.getUserStatus() != UserStatusEnum.ENABLE) {
+            return Result.error(MessageConstant.ACCOUNT_LOCKED);
+        }
+        // 3. 匹配密码
+        if (DigestUtils.md5DigestAsHex(userLoginDTO.getPassword().getBytes()).equals(user.getPassword())) {
+            // 3.1 登录成功 ， 存放 token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put(JwtClaimsConstant.ROLE, RoleEnum.USER.getRole());
+            claims.put(JwtClaimsConstant.USER_ID, user.getUserId());
+            claims.put(JwtClaimsConstant.USERNAME, user.getUsername());
+            claims.put(JwtClaimsConstant.EMAIL, user.getEmail());
+            String token = jwtUtil.generateToken(claims);
+
+            // 3.2 将token存入redis
+            stringRedisTemplate.opsForValue().set(token, token, 6, TimeUnit.HOURS);
+
+            // 3.3 返回结果
+            return Result.success(MessageConstant.LOGIN + MessageConstant.SUCCESS, token);
+        }
+        // 4. 登录失败
+        return Result.error(MessageConstant.PASSWORD + MessageConstant.ERROR);
+    }
+
+
+
+
+
 }

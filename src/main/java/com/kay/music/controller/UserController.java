@@ -1,6 +1,7 @@
 package com.kay.music.controller;
 
 import com.kay.music.constant.MessageConstant;
+import com.kay.music.pojo.dto.UserLoginDTO;
 import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
@@ -55,7 +56,16 @@ public class UserController {
         return userService.register(userRegisterDTO);
     }
 
-
+    /**
+     * @Description: 用户登录
+     * @Author: Kay
+     * @date:   2025/11/19 11:29
+     */
+    @Operation(summary = "用户登录")
+    @PostMapping("/login")
+    public Result login(@RequestBody @Valid UserLoginDTO userLoginDTO){
+        return userService.login(userLoginDTO);
+    }
 
 
 }

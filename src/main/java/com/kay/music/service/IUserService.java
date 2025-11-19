@@ -1,10 +1,7 @@
 package com.kay.music.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.kay.music.pojo.dto.UserAddDTO;
-import com.kay.music.pojo.dto.UserDTO;
-import com.kay.music.pojo.dto.UserRegisterDTO;
-import com.kay.music.pojo.dto.UserSearchDTO;
+import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.User;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
@@ -36,4 +33,6 @@ public interface IUserService extends IService<User> {
     boolean verifyVerificationCode(String email, String verificationCode);
 
     Result register(UserRegisterDTO userRegisterDTO);
+
+    Result login(UserLoginDTO userLoginDTO);
 }
