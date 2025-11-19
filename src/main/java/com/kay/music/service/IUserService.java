@@ -38,4 +38,6 @@ public interface IUserService extends IService<User> {
     Result login(UserLoginDTO userLoginDTO);
 
     Result<UserVO> userInfo();
+
+    Result updateUserInfo(UserDTO userDTO);
 }

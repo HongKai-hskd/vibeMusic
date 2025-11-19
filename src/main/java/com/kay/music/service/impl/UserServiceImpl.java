@@ -21,6 +21,7 @@ import com.kay.music.utils.JwtUtil;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -48,6 +49,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final EmailService emailService;
     private final StringRedisTemplate stringRedisTemplate;
     private final JwtUtil jwtUtil;
+
+    @Value("${jwt.expiration_time}")
+    private Long EXPIRATION_HOUR;
 
     /**
      * @Description: 获取所有用户数量
@@ -364,7 +368,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             String token = jwtUtil.generateToken(claims);
 
             // 3.2 将token存入redis
-            stringRedisTemplate.opsForValue().set(token, token, 6, TimeUnit.HOURS);
+            stringRedisTemplate.opsForValue().set(token, token, EXPIRATION_HOUR, TimeUnit.HOURS);
 
             // 3.3 返回结果
             return Result.success(MessageConstant.LOGIN + MessageConstant.SUCCESS, token);
@@ -386,6 +390,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         BeanUtils.copyProperties(user, userVO);
         return Result.success(userVO);
     }
+
+    /**
+     * @Description: 更新用户信息
+     * @Author: Kay
+     * @date:   2025/11/19 20:23
+     */
+    @Override
+    @CacheEvict(cacheNames = "userCache", allEntries = true)
+    public Result updateUserInfo(UserDTO userDTO) {
+        Long userId = ThreadLocalUtil.getUserId();
+
+        if ( userDTO.getUserId() != null && !userDTO.getUserId().equals(userId) ) {
+            // 如果需要修改的 user 和 自己的 id 不等，说明在篡改别人的信息，需要拒绝
+            return Result.error(MessageConstant.NOT_PERMISSION_UPDATE);
+        }
+
+        // 1.1 需要更改的 username 已存在
+        User userByUsername = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userDTO.getUsername()));
+        if (userByUsername != null && !userByUsername.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.USERNAME + MessageConstant.ALREADY_EXISTS);
+        }
+        // 1.2 需要更改的 phone 已存在
+        User userByPhone = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getPhone, userDTO.getPhone()));
+        if (userByPhone != null && !userByPhone.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.PHONE + MessageConstant.ALREADY_EXISTS);
+        }
+        // 1.3 需要更改的 email 已存在
+        User userByEmail = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, userDTO.getEmail()));
+        if (userByEmail != null && !userByEmail.getUserId().equals(userId)) {
+            return Result.error(MessageConstant.EMAIL + MessageConstant.ALREADY_EXISTS);
+        }
+
+        User user = new User();
+        BeanUtils.copyProperties(userDTO, user);
+        user.setUpdateTime(LocalDateTime.now());
+
+        if (userMapper.updateById(user) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
+
+
+
+
 
 
 }

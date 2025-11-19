@@ -1,6 +1,7 @@
 package com.kay.music.controller;
 
 import com.kay.music.constant.MessageConstant;
+import com.kay.music.pojo.dto.UserDTO;
 import com.kay.music.pojo.dto.UserLoginDTO;
 import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.pojo.vo.UserVO;
@@ -91,6 +92,21 @@ public class UserController {
     public Result<UserVO> getUserInfo() {
         return userService.userInfo();
     }
+
+    /**
+     * @Description: 更新用户信息
+     * @Author: Kay
+     * @date:   2025/11/19 20:22
+     */
+    @Operation(summary = "更新用户信息")
+    @PutMapping("/updateUserInfo")
+    public Result updateUserInfo(@RequestBody @Valid UserDTO userDTO){
+        return userService.updateUserInfo(userDTO);
+    }
+
+
+
+
 
 
 }
