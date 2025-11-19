@@ -458,4 +458,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
 
+    /**
+     * @Description: 更新用户密码，并注销 token
+     * @param: userPasswordDTO 用户密码信息
+     * @param: token  认证token
+     * @Author: Kay
+     * @date:   2025/11/19 21:40
+     */
+    @Override
+    public Result updateUserPassword(UserPasswordDTO userPasswordDTO, String token) {
+
+        Long userId = ThreadLocalUtil.getUserId();
+        User user = userMapper.selectById(userId);
+
+        // 1.1 输入的 oldPassword 需要正确
+        if (!user.getPassword().equals(DigestUtils.md5DigestAsHex(userPasswordDTO.getOldPassword().getBytes()))) {
+            return Result.error(MessageConstant.OLD_PASSWORD_ERROR);
+        }
+        // 1.2 新密码不能与原密码相同
+        if (user.getPassword().equals(DigestUtils.md5DigestAsHex(userPasswordDTO.getNewPassword().getBytes()))) {
+            return Result.error(MessageConstant.NEW_PASSWORD_ERROR);
+        }
+
+        // 1.3 确认密码需要匹配
+        if (!userPasswordDTO.getRepeatPassword().equals(userPasswordDTO.getNewPassword())) {
+            return Result.error(MessageConstant.PASSWORD_NOT_MATCH);
+        }
+
+        if (userMapper.update(new User().setPassword(DigestUtils.md5DigestAsHex(userPasswordDTO.getNewPassword().getBytes())).setUpdateTime(LocalDateTime.now()),
+                new LambdaQueryWrapper<User>().eq(User::getUserId, userId)) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+        // 注销token
+        stringRedisTemplate.delete(token);
+
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
+
+
 }

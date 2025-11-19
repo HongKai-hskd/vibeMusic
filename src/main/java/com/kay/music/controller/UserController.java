@@ -3,6 +3,7 @@ package com.kay.music.controller;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.pojo.dto.UserDTO;
 import com.kay.music.pojo.dto.UserLoginDTO;
+import com.kay.music.pojo.dto.UserPasswordDTO;
 import com.kay.music.pojo.dto.UserRegisterDTO;
 import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.Result;
@@ -119,7 +120,19 @@ public class UserController {
         return userService.updateUserAvatar(avatarUrl);
     }
 
-
+    
+    /**
+     * @Description: 更新用户密码，并注销 token
+     * @param: userPasswordDTO 用户密码信息
+     * @param: token 认证token
+     * @Author: Kay
+     * @date:   2025/11/19 21:40
+     */
+    @PatchMapping("/updateUserPassword")
+    public Result updateUserPassword(@RequestBody @Valid UserPasswordDTO userPasswordDTO,
+                                     @RequestHeader("Authorization") String token){
+        return userService.updateUserPassword(userPasswordDTO, token);
+    }
 
 
 

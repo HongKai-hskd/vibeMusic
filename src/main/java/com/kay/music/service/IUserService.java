@@ -42,4 +42,6 @@ public interface IUserService extends IService<User> {
     Result updateUserInfo(UserDTO userDTO);
 
     Result updateUserAvatar(String avatarUrl);
+
+    Result updateUserPassword(UserPasswordDTO userPasswordDTO, String token);
 }
