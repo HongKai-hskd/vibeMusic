@@ -522,5 +522,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.success(MessageConstant.PASSWORD + MessageConstant.RESET + MessageConstant.SUCCESS);
     }
 
+    /**
+     * @Description: 登出
+     * @Author: Kay
+     * @date:   2025/11/19 23:17
+     */
+    @Override
+    @CacheEvict(cacheNames = {"userCache", "userFavoriteCache", "songCache", "artistCache", "playlistCache"}, allEntries = true)
+    public Result logout(String token) {
+        // 注销token
+        Boolean result = stringRedisTemplate.delete(token);
+        if (result != null && result) {
+            return Result.success(MessageConstant.LOGOUT + MessageConstant.SUCCESS);
+        }
+        return Result.error(MessageConstant.LOGOUT + MessageConstant.FAILED);
+    }
+
 
 }

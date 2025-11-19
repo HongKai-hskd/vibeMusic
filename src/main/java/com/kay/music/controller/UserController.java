@@ -151,5 +151,17 @@ public class UserController {
     }
 
 
+    /**
+     * @Description:  登出
+     * @Author: Kay
+     * @date:   2025/11/19 23:16
+     */
+    @Operation(summary = "登出")
+    @PostMapping("/logout")
+    public Result logout(@RequestHeader("Authorization") String token) {
+        return userService.logout(token);
+    }
+
+
 
 }
