@@ -495,5 +495,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
 
+    /**
+     * @Description: 重置用户密码
+     * @Author: Kay
+     * @date:   2025/11/19 21:53
+     */
+    @Override
+    public Result resetUserPassword(UserResetPasswordDTO userResetPasswordDTO) {
+        // 删除Redis中的验证码
+        stringRedisTemplate.delete("verificationCode:" + userResetPasswordDTO.getEmail());
+
+        // 校验 邮箱是否存在， 如果不存在，说明 redis 存的验证码，可能是别人注册用着的
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, userResetPasswordDTO.getEmail()));
+        if (user == null) {
+            return Result.error(MessageConstant.EMAIL + MessageConstant.NOT_EXIST);
+        }
+        // 校验两次输入的密码是否一致
+        if (!userResetPasswordDTO.getRepeatPassword().equals(userResetPasswordDTO.getNewPassword())) {
+            return Result.error(MessageConstant.PASSWORD_NOT_MATCH);
+        }
+        // 更新新密码
+        if (userMapper.update(new User().setPassword(DigestUtils.md5DigestAsHex(userResetPasswordDTO.getNewPassword().getBytes())).setUpdateTime(LocalDateTime.now()),
+                new LambdaQueryWrapper<User>().eq(User::getUserId, user.getUserId())) == 0) {
+            return Result.error(MessageConstant.PASSWORD + MessageConstant.RESET + MessageConstant.FAILED);
+        }
+        return Result.success(MessageConstant.PASSWORD + MessageConstant.RESET + MessageConstant.SUCCESS);
+    }
+
 
 }

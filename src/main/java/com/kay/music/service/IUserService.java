@@ -44,4 +44,6 @@ public interface IUserService extends IService<User> {
     Result updateUserAvatar(String avatarUrl);
 
     Result updateUserPassword(UserPasswordDTO userPasswordDTO, String token);
+
+    Result resetUserPassword(UserResetPasswordDTO userResetPasswordDTO);
 }

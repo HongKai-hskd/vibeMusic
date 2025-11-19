@@ -1,10 +1,7 @@
 package com.kay.music.controller;
 
 import com.kay.music.constant.MessageConstant;
-import com.kay.music.pojo.dto.UserDTO;
-import com.kay.music.pojo.dto.UserLoginDTO;
-import com.kay.music.pojo.dto.UserPasswordDTO;
-import com.kay.music.pojo.dto.UserRegisterDTO;
+import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.vo.UserVO;
 import com.kay.music.result.Result;
 import com.kay.music.service.IUserService;
@@ -113,7 +110,7 @@ public class UserController {
      * @Author: Kay
      * @date:   2025/11/19 21:26
      */
-    @Operation(summary = "更新用户头像")
+    @Operation(summary = "更新用户头像，并上传 minio")
     @PatchMapping("/updateUserAvatar")  // HTTP 请求方式之一：更新部分字段
     public Result updateUserAvatar(@RequestParam("avatar") MultipartFile avatar){
         String avatarUrl = minioService.uploadFile(avatar, "users");  // 上传到 users 目录
@@ -128,12 +125,30 @@ public class UserController {
      * @Author: Kay
      * @date:   2025/11/19 21:40
      */
+    @Operation(summary = "更新用户密码，并注销 token")
     @PatchMapping("/updateUserPassword")
     public Result updateUserPassword(@RequestBody @Valid UserPasswordDTO userPasswordDTO,
                                      @RequestHeader("Authorization") String token){
         return userService.updateUserPassword(userPasswordDTO, token);
     }
 
+
+    /**
+     * @Description: 根据邮箱验证码重置密码
+     * @Author: Kay
+     * @date:   2025/11/19 21:52
+     */
+    @Operation(summary = "根据邮箱验证码重置密码")
+    @PatchMapping("/resetUserPassword")
+    public Result resetUserPassword(@RequestBody @Valid UserResetPasswordDTO userResetPasswordDTO){
+
+        // 验证验证码是否正确
+        boolean isCodeValid = userService.verifyVerificationCode(userResetPasswordDTO.getEmail(), userResetPasswordDTO.getVerificationCode());
+        if (!isCodeValid) {
+            return Result.error(MessageConstant.VERIFICATION_CODE + MessageConstant.INVALID);
+        }
+        return userService.resetUserPassword(userResetPasswordDTO);
+    }
 
 
 
