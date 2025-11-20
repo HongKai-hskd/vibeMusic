@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kay.music.pojo.entity.Song;
 import com.kay.music.pojo.vo.SongVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -15,8 +16,12 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface SongMapper extends BaseMapper<Song> {
 
-    // TODO
-    // 获取歌曲列表
+    /**
+     * 如果 songName == null ，则 (null IS NULL) 为 true → 该条件不生效
+     * 如果有值，则执行模糊查询 LIKE %xxx%
+     * 无需 <if> 标签也能实现动态 where 条件
+     */
+    // 获取歌曲列表 ， 只对传入参数不为空的字段做模糊匹配搜索
     @Select("""
                 SELECT 
                     s.id AS songId, 
@@ -34,5 +39,8 @@ public interface SongMapper extends BaseMapper<Song> {
                     AND (#{artistName} IS NULL OR a.name LIKE CONCAT('%', #{artistName}, '%'))
                     AND (#{album} IS NULL OR s.album LIKE CONCAT('%', #{album}, '%'))
             """)
-    IPage<SongVO> getSongsWithArtist(Page<SongVO> page, String songName, String artistName, String album);
+    IPage<SongVO> getSongsWithArtist(Page<SongVO> page,
+                                     @Param("songName") String songName,
+                                     @Param("artistName") String artistName,
+                                     @Param("album") String album);
 }

@@ -13,5 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
  * @date 2025/11/19 23:39
  */
 public interface ISongService extends IService<Song> {
-    Result<PageResult<SongVO>> getAllSongs(SongDTO songDTO, HttpServletRequest request);
+
+    Result<PageResult<SongVO>> getAllSongsForGuest(SongDTO songDTO);
+
+    Result<PageResult<SongVO>> getAllSongsForUser(SongDTO songDTO, Long userId);
 }
