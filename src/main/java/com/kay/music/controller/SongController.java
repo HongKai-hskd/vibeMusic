@@ -14,11 +14,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +32,7 @@ public class SongController {
 
     private final ISongService songService;
     private final JwtUtil jwtUtil;
+    private final ThreadLocalUtil threadLocalUtil;
 
     /**
      * @Description: 获取所有歌曲 , 区分了 用户登录 ， 无用户登录 时， 缓存问题（拆成了两个函数）
@@ -45,20 +44,8 @@ public class SongController {
     public Result<PageResult<SongVO>> getAllSongs(@RequestBody @Valid SongDTO songDTO,
                                                   HttpServletRequest request){
         // 因为 这个接口 是登录和不登录都能访问的，所以进行了 放行，就没有校验 jwt ， 当然 ThreadLocal就没有内容了
-        // TODO 后续需要优化整合成通用方法
         // 1. 如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
-        if (ThreadLocalUtil.getUserId() == null) {
-            String token = request.getHeader("Authorization");
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-
-            if (token != null && !token.isEmpty()) {
-                // 手动解析 JWT（直接用你已有的 JwtUtil）
-                Map<String, Object> claims = jwtUtil.parseToken(token);
-                ThreadLocalUtil.set(claims);
-            }
-        }
+        threadLocalUtil.setThreadLocalByToken(request);
 
         // 2. 再正常读取 userId / role
         Long userId = ThreadLocalUtil.getUserId();
@@ -71,4 +58,19 @@ public class SongController {
         // 登录用户 → 用户版（注意这里传 userId，方便做缓存 key）
         return songService.getAllSongsForUser(songDTO, userId);
     }
+
+    /**
+     * @Description: 获取推荐歌曲,推荐歌曲的数量为 20
+     * @Author: Kay
+     * @date:   2025/11/20 23:22
+     */
+    @Operation(summary = "获取推荐歌曲")
+    @GetMapping("/getRecommendedSongs")
+    public Result<List<SongVO>> getRecommendedSongs(HttpServletRequest request) {
+        // 1. 如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
+        threadLocalUtil.setThreadLocalByToken(request);
+//        return songService.getRecommendedSongs(request);
+        return null;
+    }
+
 }

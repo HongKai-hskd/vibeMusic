@@ -1,6 +1,9 @@
 package com.kay.music.utils;
 
 import com.kay.music.constant.JwtClaimsConstant;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -9,7 +12,11 @@ import java.util.Map;
  * @Author: Kay
  * @date:   2025/11/16 17:05
  */
+@Component
+@RequiredArgsConstructor
 public class ThreadLocalUtil {
+
+    private final JwtUtil jwtUtil;
 
     // 提供ThreadLocal对象,
     private static final ThreadLocal THREAD_LOCAL = new ThreadLocal();
@@ -17,6 +24,29 @@ public class ThreadLocalUtil {
     // 根据键获取值
     public static <T> T get() {
         return (T) THREAD_LOCAL.get();
+    }
+
+    /**
+     * @Description: 根据 token 重新设置 ThreadLocal ， 可以避免 某些被 拦截器 排除的接口 没有经过 jwt 设置 ThreadLocal
+     *               如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
+     * @param: request
+     * @return: void
+     * @Author: Kay
+     * @date:   2025/11/20 23:27
+     */
+    public void setThreadLocalByToken(HttpServletRequest request){
+        if (ThreadLocalUtil.getUserId() == null) {
+            String token = request.getHeader("Authorization");
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            if (token != null && !token.isEmpty()) {
+                // 手动解析 JWT（直接用你已有的 JwtUtil）
+                Map<String, Object> claims = jwtUtil.parseToken(token);
+                ThreadLocalUtil.set(claims);
+            }
+        }
     }
 
     /**
