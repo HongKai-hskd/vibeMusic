@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.LikeStatusEnum;
+import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.mapper.SongMapper;
 import com.kay.music.mapper.UserFavoriteMapper;
 import com.kay.music.pojo.dto.SongDTO;
 import com.kay.music.pojo.entity.Song;
 import com.kay.music.pojo.entity.UserFavorite;
+import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
@@ -193,9 +195,31 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         return Result.success(recommendedSongs);
     }
 
+    /**
+     * @Description: 获取歌曲详情，如果用户登录了，还需要关注是否点赞
+     * @Author: Kay
+     * @date:   2025/11/21 10:34
+     */
+    @Override
+    public Result<SongDetailVO> getSongDetail(Long songId, HttpServletRequest request) {
 
+        SongDetailVO songDetailVO = songMapper.getSongDetailById(songId);
 
+        // 如果用户登录了，需要额外操作 ( 设置 这首歌 是否被用户 点赞)
+        Long userId = ThreadLocalUtil.getUserId();
+        if ( userId != null ) {
+            // 获取用户收藏的歌曲
+            UserFavorite favoriteSong = userFavoriteMapper.selectOne(new LambdaQueryWrapper<UserFavorite>()
+                    .eq(UserFavorite::getUserId, userId)
+                    .eq(UserFavorite::getType, 0)
+                    .eq(UserFavorite::getSongId, songId));
+            if (favoriteSong != null) {
+                songDetailVO.setLikeStatus(LikeStatusEnum.LIKE.getId());
+            }
+        }
 
+        return Result.success(songDetailVO);
+    }
 
 
 }

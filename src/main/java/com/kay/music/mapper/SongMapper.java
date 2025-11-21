@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kay.music.pojo.entity.Song;
+import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -70,4 +71,6 @@ public interface SongMapper extends BaseMapper<Song> {
     List<SongVO> getRecommendedSongsByStyles(@Param("sortedStyleIds") List<Long> sortedStyleIds,
                                              @Param("favoriteSongIds") List<Long> favoriteSongIds,
                                              @Param("limit") int limit);
+
+    SongDetailVO getSongDetailById(Long songId);
 }

@@ -2,6 +2,7 @@ package com.kay.music.controller;
 
 import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.pojo.dto.SongDTO;
+import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
@@ -70,6 +71,19 @@ public class SongController {
         // 1. 如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
         threadLocalUtil.setThreadLocalByToken(request);
         return songService.getRecommendedSongs();
+    }
+
+    /**
+     * @Description: 获取歌曲详情，如果用户登录了，还需要关注是否点赞
+     * @Author: Kay
+     * @date:   2025/11/21 10:34
+     */
+    @Operation(summary = "获取歌曲详情")
+    @GetMapping("/getSongDetail/{id}")
+    public Result<SongDetailVO> getSongDetail( @PathVariable("id") Long songId, HttpServletRequest request ){
+        // 1. 如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
+        threadLocalUtil.setThreadLocalByToken(request);
+        return songService.getSongDetail(songId, request);
     }
 
 }
