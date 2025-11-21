@@ -8,6 +8,7 @@ import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
 import com.kay.music.service.IArtistService;
 import com.kay.music.service.IUserService;
+import com.kay.music.service.MinioService;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class AdminController {
     private final IAdminService adminService;
     private final IUserService userService;
     private final IArtistService artistService;
+    private final MinioService minioService;
 
     /**
      * @Author: Kay
@@ -196,13 +199,63 @@ public class AdminController {
         return artistService.getAllArtistsAndDetail(artistDTO);
     }
 
+    /**
+     * @Description: 添加歌手
+     * @Author: Kay
+     * @date:   2025/11/21 20:46
+     */
+    @Operation(summary = "添加歌手")
+    @PostMapping("/addArtist")
+    public Result addArtist(@RequestBody ArtistAddDTO artistAddDTO){
+        return artistService.addArtist(artistAddDTO);
+    }
 
+    /**
+     * @Description: 更新歌手信息
+     * @Author: Kay
+     * @date:   2025/11/21 20:49
+     */
+    @Operation(summary = "添加歌手")
+    @PutMapping("/updateArtist")
+    public Result updateArtist(@RequestBody ArtistUpdateDTO artistUpdateDTO) {
+        return artistService.updateArtist(artistUpdateDTO);
+    }
 
+    /**
+     * @Description: 更新歌手头像
+     * @Author: Kay
+     * @date:   2025/11/21 20:54
+     */
+    @Operation(summary = "更新歌手头像")
+    @PatchMapping("/updateArtistAvatar/{id}")
+    public Result updateArtistAvatar(@PathVariable("id") Long artistId, @RequestParam("avatar") MultipartFile avatar) {
+        String avatarUrl = minioService.uploadFile(avatar, "artists");  // 上传到 artists 目录
+        return artistService.updateArtistAvatar(artistId, avatarUrl);
+    }
 
+    /**
+     * @Description: 删除歌手
+     * @Author: Kay
+     * @date:   2025/11/21 20:57
+     */
+    @Operation(summary = "删除歌手")
+    @DeleteMapping("/deleteArtist/{id}")
+    public Result deleteArtist(@PathVariable("id") Long artistId) {
+        return artistService.deleteArtist(artistId);
+    }
 
+    /**
+     * @Description: 批量删除歌手
+     * @Author: Kay
+     * @date:   2025/11/21 20:59
+     */
+    @Operation(summary = "批量删除歌手")
+    @DeleteMapping("/deleteArtists")
+    public Result deleteArtists(@RequestBody List<Long> artistIds) {
+        return artistService.deleteArtists(artistIds);
+    }
 
-
-
+    /**********************************************************************************************/
 
 
 

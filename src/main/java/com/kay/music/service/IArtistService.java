@@ -1,10 +1,14 @@
 package com.kay.music.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.kay.music.pojo.dto.ArtistAddDTO;
 import com.kay.music.pojo.dto.ArtistDTO;
+import com.kay.music.pojo.dto.ArtistUpdateDTO;
 import com.kay.music.pojo.entity.Artist;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
+
+import java.util.List;
 
 /**
  * @author Kay
@@ -14,4 +18,14 @@ public interface IArtistService extends IService<Artist> {
     Result<Long> getAllArtistsCount(Integer gender, String area);
 
     Result<PageResult<Artist>> getAllArtistsAndDetail(ArtistDTO artistDTO);
+
+    Result addArtist(ArtistAddDTO artistAddDTO);
+
+    Result updateArtist(ArtistUpdateDTO artistUpdateDTO);
+
+    Result updateArtistAvatar(Long artistId, String avatarUrl);
+
+    Result deleteArtist(Long artistId);
+
+    Result deleteArtists(List<Long> artistIds);
 }
