@@ -8,7 +8,6 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @Slf4j
-@MapperScan("com.kay.music.mapper")
 @EnableCaching
 public class VibeMusicApplication {
 
