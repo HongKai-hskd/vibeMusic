@@ -8,6 +8,7 @@ import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.IAdminService;
+import com.kay.music.service.IArtistService;
 import com.kay.music.service.IUserService;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +36,7 @@ public class AdminController {
 
     private final IAdminService adminService;
     private final IUserService userService;
+    private final IArtistService artistService;
 
     /**
      * @Author: Kay
@@ -171,5 +173,29 @@ public class AdminController {
     }
 
     /**********************************************************************************************/
+
+    /**
+     * @Description: 获取所有歌手数量
+     * @Author: Kay
+     * @date:   2025/11/21 11:11
+     */
+    @Operation(summary = "获取所有歌手数量")
+    @GetMapping("/getAllArtistsCount")
+    public Result<Long> getAllArtistsCount(@RequestParam(required = false) Integer gender,
+                                           @RequestParam(required = false) String area){
+
+        return artistService.getAllArtistsCount(gender, area);
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 }
