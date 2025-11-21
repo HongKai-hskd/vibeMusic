@@ -2,6 +2,7 @@ package com.kay.music.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.kay.music.pojo.entity.Artist;
+import com.kay.music.pojo.vo.ArtistDetailVO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,4 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface ArtistMapper extends BaseMapper<Artist> {
+    ArtistDetailVO getArtistDetailById(Long artistId);
 }
