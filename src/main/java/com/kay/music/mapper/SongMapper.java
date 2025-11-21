@@ -9,6 +9,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * @author Kay
  * @date 2025/11/19 23:40
@@ -43,4 +45,29 @@ public interface SongMapper extends BaseMapper<Song> {
                                      @Param("songName") String songName,
                                      @Param("artistName") String artistName,
                                      @Param("album") String album);
+
+    // 获取随机歌曲列表
+    @Select("""
+                SELECT 
+                    s.id AS songId, 
+                    s.name AS songName, 
+                    s.album, 
+                    s.duration, 
+                    s.cover_url AS coverUrl, 
+                    s.audio_url AS audioUrl, 
+                    s.release_time AS releaseTime, 
+                    a.name AS artistName
+                FROM tb_song s
+                LEFT JOIN tb_artist a ON s.artist_id = a.id
+                ORDER BY RAND() LIMIT 20
+            """)
+    List<SongVO> getRandomSongsWithArtist();
+
+    // 根据用户收藏的歌曲id列表获取歌曲列表
+    List<Long> getFavoriteSongStyles(@Param("favoriteSongIds") List<Long> favoriteSongIds);
+
+    // 根据用户收藏的歌曲id列表获取歌曲列表
+    List<SongVO> getRecommendedSongsByStyles(@Param("sortedStyleIds") List<Long> sortedStyleIds,
+                                             @Param("favoriteSongIds") List<Long> favoriteSongIds,
+                                             @Param("limit") int limit);
 }

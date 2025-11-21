@@ -69,8 +69,7 @@ public class SongController {
     public Result<List<SongVO>> getRecommendedSongs(HttpServletRequest request) {
         // 1. 如果 ThreadLocal 为空，但 header 里有 token，可以手动解析一次
         threadLocalUtil.setThreadLocalByToken(request);
-//        return songService.getRecommendedSongs(request);
-        return null;
+        return songService.getRecommendedSongs();
     }
 
 }
