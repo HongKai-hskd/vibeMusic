@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kay.music.pojo.entity.Song;
+import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -73,4 +74,28 @@ public interface SongMapper extends BaseMapper<Song> {
                                              @Param("limit") int limit);
 
     SongDetailVO getSongDetailById(Long songId);
+
+    // 获取歌曲列表
+    @Select("""
+                SELECT 
+                    s.id AS songId, 
+                    s.name AS songName, 
+                    s.artist_id AS artistId, 
+                    s.album, 
+                    s.lyric, 
+                    s.duration, 
+                    s.style, 
+                    s.cover_url AS coverUrl, 
+                    s.audio_url AS audioUrl, 
+                    s.release_time AS releaseTime, 
+                    a.name AS artistName
+                FROM tb_song s
+                LEFT JOIN tb_artist a ON s.artist_id = a.id
+                WHERE 
+                    (#{artistId} IS NULL OR s.artist_id = #{artistId})
+                    AND(#{songName} IS NULL OR s.name LIKE CONCAT('%', #{songName}, '%'))
+                    AND (#{album} IS NULL OR s.album LIKE CONCAT('%', #{album}, '%'))
+                ORDER BY s.release_time DESC
+            """)
+    IPage<SongAdminVO> getSongsWithArtistName(Page<SongAdminVO> page, Long artistId, String songName, String album);
 }

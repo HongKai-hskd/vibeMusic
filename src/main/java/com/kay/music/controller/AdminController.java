@@ -2,13 +2,12 @@ package com.kay.music.controller;
 
 import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.Artist;
+import com.kay.music.pojo.vo.ArtistNameVO;
+import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
-import com.kay.music.service.IAdminService;
-import com.kay.music.service.IArtistService;
-import com.kay.music.service.IUserService;
-import com.kay.music.service.MinioService;
+import com.kay.music.service.*;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,6 +37,7 @@ public class AdminController {
     private final IUserService userService;
     private final IArtistService artistService;
     private final MinioService minioService;
+    private final ISongService songService;
 
     /**
      * @Author: Kay
@@ -257,6 +257,60 @@ public class AdminController {
 
     /**********************************************************************************************/
 
+    /**
+     * @Description: 获取所有歌曲的数量
+     * @Author: Kay
+     * @date:   2025/11/21 21:30
+     */
+    @Operation(summary = "获取所有歌曲的数量")
+    @GetMapping("/getAllSongsCount")
+    public Result<Long> getAllSongsCount(@RequestParam(required = false) String style) {
+        return songService.getAllSongsCount(style);
+    }
+
+    /**
+     * @Description: 获取所有歌手id和名称
+     * @Author: Kay
+     * @date:   2025/11/21 21:32
+     */
+    @GetMapping("/getAllArtistNames")
+    @Operation(summary = "获取所有歌手id和名称")
+    public Result<List<ArtistNameVO>> getAllArtistNames() {
+        return artistService.getAllArtistNames();
+    }
+
+    /**
+     * @Description: 根据歌手id获取其歌曲信息
+     * @Author: Kay
+     * @date:   2025/11/21 21:34
+     */
+    @Operation(summary = "根据歌手id获取其歌曲信息")
+    @PostMapping("/getAllSongsByArtist")
+    public Result<PageResult<SongAdminVO>> getAllSongsByArtist(@RequestBody SongAndArtistDTO songDTO) {
+        return songService.getAllSongsByArtist(songDTO);
+    }
+
+    /**
+     * @Description: 添加歌曲信息
+     * @Author: Kay
+     * @date:   2025/11/21 21:40
+     */
+    @Operation(summary = "添加歌曲信息")
+    @PostMapping("/addSong")
+    public Result addSong(@RequestBody SongAddDTO songAddDTO) {
+        return songService.addSong(songAddDTO);
+    }
+
+    /**
+     * @Description: 修改歌曲信息
+     * @Author: Kay
+     * @date:   2025/11/21 21:47
+     */
+    @Operation(summary = "修改歌曲信息")
+    @PutMapping("/updateSong")
+    public Result UpdateSong(@RequestBody SongUpdateDTO songUpdateDTO) {
+        return songService.updateSong(songUpdateDTO);
+    }
 
 
 

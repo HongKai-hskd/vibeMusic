@@ -14,6 +14,7 @@ import com.kay.music.pojo.dto.ArtistUpdateDTO;
 import com.kay.music.pojo.entity.Artist;
 import com.kay.music.pojo.entity.UserFavorite;
 import com.kay.music.pojo.vo.ArtistDetailVO;
+import com.kay.music.pojo.vo.ArtistNameVO;
 import com.kay.music.pojo.vo.ArtistVO;
 import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
@@ -329,6 +330,30 @@ public class ArtistServiceImpl extends ServiceImpl<ArtistMapper, Artist> impleme
         artistDetailVO.setSongs(songVOList);
 
         return Result.success(artistDetailVO);
+    }
+
+    /**
+     * @Description: 获取所有歌手id和歌手名称
+     * @Author: Kay
+     * @date:   2025/11/21 21:33
+     */
+    @Override
+    @Cacheable(key = "'allArtistNames'")
+    public Result<List<ArtistNameVO>> getAllArtistNames() {
+        List<Artist> artists = artistMapper.selectList(new LambdaQueryWrapper<Artist>().orderByDesc(Artist::getArtistId));
+        if (artists.isEmpty()) {
+            return Result.success(MessageConstant.DATA_NOT_FOUND, null);
+        }
+
+        List<ArtistNameVO> artistNameVOList = artists.stream()
+                .map(artist -> {
+                    ArtistNameVO artistNameVO = new ArtistNameVO();
+                    artistNameVO.setArtistId(artist.getArtistId());
+                    artistNameVO.setArtistName(artist.getArtistName());
+                    return artistNameVO;
+                }).toList();
+
+        return Result.success(artistNameVOList);
     }
 
 

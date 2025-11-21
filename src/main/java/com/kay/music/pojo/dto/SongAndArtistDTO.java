@@ -1,0 +1,46 @@
+package com.kay.music.pojo.dto;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * @author Kay
+ * @date 2025/11/21 21:35
+ */
+@Data
+public class SongAndArtistDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 页码
+     */
+    @NotNull
+    private Integer pageNum;
+
+    /**
+     * 每页数量
+     */
+    @NotNull
+    private Integer pageSize;
+
+    /**
+     * 歌手
+     */
+    private Long artistId;
+
+    /**
+     * 歌曲名
+     */
+    private String songName;
+
+    /**
+     * 专辑
+     */
+    private String album;
+
+}

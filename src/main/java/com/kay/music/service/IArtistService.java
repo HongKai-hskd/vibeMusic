@@ -6,6 +6,7 @@ import com.kay.music.pojo.dto.ArtistDTO;
 import com.kay.music.pojo.dto.ArtistUpdateDTO;
 import com.kay.music.pojo.entity.Artist;
 import com.kay.music.pojo.vo.ArtistDetailVO;
+import com.kay.music.pojo.vo.ArtistNameVO;
 import com.kay.music.pojo.vo.ArtistVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
@@ -37,4 +38,6 @@ public interface IArtistService extends IService<Artist> {
     Result<List<ArtistVO>> getRandomArtists();
 
     Result<ArtistDetailVO> getArtistDetail(Long artistId);
+
+    Result<List<ArtistNameVO>> getAllArtistNames();
 }

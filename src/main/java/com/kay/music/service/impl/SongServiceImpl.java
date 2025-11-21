@@ -1,17 +1,26 @@
 package com.kay.music.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.LikeStatusEnum;
 import com.kay.music.enumeration.RoleEnum;
+import com.kay.music.mapper.GenreMapper;
 import com.kay.music.mapper.SongMapper;
+import com.kay.music.mapper.StyleMapper;
 import com.kay.music.mapper.UserFavoriteMapper;
+import com.kay.music.pojo.dto.SongAddDTO;
+import com.kay.music.pojo.dto.SongAndArtistDTO;
 import com.kay.music.pojo.dto.SongDTO;
+import com.kay.music.pojo.dto.SongUpdateDTO;
+import com.kay.music.pojo.entity.Genre;
 import com.kay.music.pojo.entity.Song;
+import com.kay.music.pojo.entity.Style;
 import com.kay.music.pojo.entity.UserFavorite;
+import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
@@ -20,15 +29,14 @@ import com.kay.music.service.ISongService;
 import com.kay.music.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,6 +53,8 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
     private final SongMapper songMapper;
     private final UserFavoriteMapper userFavoriteMapper;
     private final RedisTemplate redisTemplate;
+    private final StyleMapper styleMapper;
+    private final GenreMapper genreMapper;
 
     /**
      * @Description: 游客版：只需要歌曲列表 + 默认 likeStatus = DEFAULT , 结果对所有“未登录用户”通用，可以全局缓存
@@ -219,6 +229,133 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         }
 
         return Result.success(songDetailVO);
+    }
+
+    /**
+     * @Description: 获取所有歌曲的数量
+     * @Author: Kay
+     * @date:   2025/11/21 21:31
+     */
+    @Override
+    public Result<Long> getAllSongsCount(String style) {
+        LambdaQueryWrapper<Song> queryWrapper = new LambdaQueryWrapper<>();
+        if (style != null) {
+            queryWrapper.like(Song::getStyle, style);
+        }
+
+        return Result.success(songMapper.selectCount(queryWrapper));
+    }
+
+    /**
+     * @Description: 获取歌手的所有歌曲
+     * @Author: Kay
+     * @date:   2025/11/21 21:36
+     */
+    @Override
+    @Cacheable(key = "#songDTO.pageNum + '-' + #songDTO.pageSize + '-' + #songDTO.songName + '-' + #songDTO.album + '-' + #songDTO.artistId")
+    public Result<PageResult<SongAdminVO>> getAllSongsByArtist(SongAndArtistDTO songDTO) {
+        // 分页查询
+        Page<SongAdminVO> page = new Page<>(songDTO.getPageNum(), songDTO.getPageSize());
+        IPage<SongAdminVO> songPage = songMapper.getSongsWithArtistName(page, songDTO.getArtistId(), songDTO.getSongName(), songDTO.getAlbum());
+
+        if (songPage.getRecords().isEmpty()) {
+            return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, null));
+        }
+
+        return Result.success(new PageResult<>(songPage.getTotal(), songPage.getRecords()));
+    }
+
+    /**
+     * @Description: 添加歌曲信息
+     * @Author: Kay
+     * @date:   2025/11/21 21:41
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result addSong(SongAddDTO songAddDTO) {
+        Song song = new Song();
+        BeanUtils.copyProperties(songAddDTO, song);
+
+        // 插入歌曲记录
+        if (songMapper.insert(song) == 0) {
+            return Result.error(MessageConstant.ADD + MessageConstant.FAILED);
+        }
+        // 获取刚插入的歌曲记录
+        Song songInDB = songMapper.selectOne(new QueryWrapper<Song>()
+                .eq("artist_id", songAddDTO.getArtistId())
+                .eq("name", songAddDTO.getSongName())
+                .eq("album", songAddDTO.getAlbum())
+                .orderByDesc("id")
+                .last("LIMIT 1"));
+
+        if (songInDB == null) {
+            return Result.error(MessageConstant.SONG + MessageConstant.NOT_FOUND);
+        }
+        Long songId = songInDB.getSongId();
+        // 解析风格字段（多个风格以逗号分隔）
+        String styleStr = songAddDTO.getStyle();
+        if (styleStr != null && !styleStr.isEmpty()) {
+            List<String> styles = Arrays.asList(styleStr.split(","));
+
+            // 查询风格 ID
+            List<Style> styleList = styleMapper.selectList(new QueryWrapper<Style>().in("name", styles));
+
+            // 插入到 tb_genre
+            for (Style style : styleList) {
+                Genre genre = new Genre();
+                genre.setSongId(songId);
+                genre.setStyleId(style.getStyleId());
+                genreMapper.insert(genre);
+            }
+        }
+        return Result.success(MessageConstant.ADD + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 更新歌曲信息
+     * @Author: Kay
+     * @date:   2025/11/21 21:48
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result updateSong(SongUpdateDTO songUpdateDTO) {
+
+        // 查询数据库中是否存在该歌曲
+        Song songInDB = songMapper.selectById(songUpdateDTO.getSongId());
+        if (songInDB == null) {
+            return Result.error(MessageConstant.SONG + MessageConstant.NOT_FOUND);
+        }
+
+        // 更新歌曲基本信息
+        Song song = new Song();
+        BeanUtils.copyProperties(songUpdateDTO, song);
+        if (songMapper.updateById(song) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+
+        Long songId = songUpdateDTO.getSongId();
+
+        // 删除 tb_genre 中该歌曲的原有风格映射
+        genreMapper.delete(new QueryWrapper<Genre>().eq("song_id", songId));
+
+        // 解析新的风格字段（多个风格以逗号分隔）
+        String styleStr = songUpdateDTO.getStyle();
+        if (styleStr != null && !styleStr.isEmpty()) {
+            List<String> styles = Arrays.asList(styleStr.split(","));
+
+            // 查询风格 ID
+            List<Style> styleList = styleMapper.selectList(new QueryWrapper<Style>().in("name", styles));
+
+            // 插入新的风格映射到 tb_genre
+            for (Style style : styleList) {
+                Genre genre = new Genre();
+                genre.setSongId(songId);
+                genre.setStyleId(style.getStyleId());
+                genreMapper.insert(genre);
+            }
+        }
+
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
 
 
