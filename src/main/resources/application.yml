@@ -99,6 +99,9 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.kay.music.controller
+    - group: 'admin'
+      paths-to-match: '/admin/**'
+      packages-to-scan: com.kay.music.controller
 # knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
