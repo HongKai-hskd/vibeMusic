@@ -1,7 +1,9 @@
 package com.kay.music.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.kay.music.pojo.dto.ArtistDTO;
 import com.kay.music.pojo.entity.Artist;
+import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 
 /**
@@ -10,4 +12,6 @@ import com.kay.music.result.Result;
  */
 public interface IArtistService extends IService<Artist> {
     Result<Long> getAllArtistsCount(Integer gender, String area);
+
+    Result<PageResult<Artist>> getAllArtistsAndDetail(ArtistDTO artistDTO);
 }

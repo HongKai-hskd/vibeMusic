@@ -1,9 +1,7 @@
 package com.kay.music.controller;
 
-import com.kay.music.pojo.dto.AdminDTO;
-import com.kay.music.pojo.dto.UserAddDTO;
-import com.kay.music.pojo.dto.UserDTO;
-import com.kay.music.pojo.dto.UserSearchDTO;
+import com.kay.music.pojo.dto.*;
+import com.kay.music.pojo.entity.Artist;
 import com.kay.music.pojo.vo.UserManagementVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
@@ -185,6 +183,17 @@ public class AdminController {
                                            @RequestParam(required = false) String area){
 
         return artistService.getAllArtistsCount(gender, area);
+    }
+
+    /**
+     * @Description: 获取所有歌手信息
+     * @Author: Kay
+     * @date:   2025/11/21 11:24
+     */
+    @Operation(summary = "获取所有歌手信息")
+    @PostMapping("/getAllArtists")
+    public Result<PageResult<Artist>> getAllArtists(@RequestBody ArtistDTO artistDTO) {
+        return artistService.getAllArtistsAndDetail(artistDTO);
     }
 
 
