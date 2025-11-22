@@ -2,6 +2,7 @@ package com.kay.music.controller;
 
 import com.kay.music.pojo.dto.*;
 import com.kay.music.pojo.entity.Artist;
+import com.kay.music.pojo.entity.Playlist;
 import com.kay.music.pojo.vo.ArtistNameVO;
 import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.UserManagementVO;
@@ -38,6 +39,7 @@ public class AdminController {
     private final IArtistService artistService;
     private final MinioService minioService;
     private final ISongService songService;
+    private final IPlaylistService playlistService;
 
     /**
      * @Author: Kay
@@ -361,7 +363,82 @@ public class AdminController {
 
     /**********************************************************************************************/
 
+    /**
+     * @Description: 获取所有歌单数量
+     * @Author: Kay
+     * @date:   2025/11/22 15:07
+     */
+    @Operation(summary = "获取所有歌单数量")
+    @GetMapping("/getAllPlaylistsCount")
+    public Result<Long> getAllPlaylistsCount(@RequestParam(required = false) String style) {
+        return playlistService.getAllPlaylistsCount(style);
+    }
 
+    /**
+     * @Description: 获取所有歌单信息
+     * @Author: Kay
+     * @date:   2025/11/22 15:12
+     */
+    @Operation(summary = "获取所有歌单信息")
+    @PostMapping("/getAllPlaylists")
+    public Result<PageResult<Playlist>> getAllPlaylists(@RequestBody PlaylistDTO playlistDTO) {
+        return playlistService.getAllPlaylistsInfo(playlistDTO);
+    }
 
+    /**
+     * @Description: 新增歌单
+     * @Author: Kay
+     * @date:   2025/11/22 15:17
+     */
+    @Operation(summary = "新增歌单")
+    @PostMapping("/addPlaylist")
+    public Result addPlaylist(@RequestBody PlaylistAddDTO playlistAddDTO) {
+        return playlistService.addPlaylist(playlistAddDTO);
+    }
+
+    /**
+     * @Description: 更新歌单信息
+     * @Author: Kay
+     * @date:   2025/11/22 15:19
+     */
+    @Operation(summary = "更新歌单信息")
+    @PutMapping("/updatePlaylist")
+    public Result updatePlaylist(@RequestBody PlaylistUpdateDTO playlistUpdateDTO) {
+        return playlistService.updatePlaylist(playlistUpdateDTO);
+    }
+
+    /**
+     * @Description: 更新歌单封面
+     * @Author: Kay
+     * @date:   2025/11/22 15:22
+     */
+    @Operation(summary = "更新歌单封面")
+    @PatchMapping("/updatePlaylistCover/{id}")
+    public Result updatePlaylistCover(@PathVariable("id") Long playlistId, @RequestParam("cover") MultipartFile cover) {
+        String coverUrl = minioService.uploadFile(cover, "playlists");  // 上传到 playlists 目录
+        return playlistService.updatePlaylistCover(playlistId, coverUrl);
+    }
+
+    /**
+     * @Description: 删除歌单
+     * @Author: Kay
+     * @date:   2025/11/22 15:23
+     */
+    @Operation(summary = "删除歌单")
+    @DeleteMapping("/deletePlaylist/{id}")
+    public Result deletePlaylist(@PathVariable("id") Long playlistId) {
+        return playlistService.deletePlaylist(playlistId);
+    }
+
+    /**
+     * @Description: 批量删除歌单
+     * @Author: Kay
+     * @date:   2025/11/22 15:28
+     */
+    @Operation(summary = "批量删除歌单")
+    @DeleteMapping("/deletePlaylists")
+    public Result deletePlaylists(@RequestBody List<Long> playlistIds) {
+        return playlistService.deletePlaylists(playlistIds);
+    }
 
 }
