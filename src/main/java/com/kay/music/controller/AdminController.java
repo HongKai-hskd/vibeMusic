@@ -312,6 +312,56 @@ public class AdminController {
         return songService.updateSong(songUpdateDTO);
     }
 
+    /**
+     * @Description: 更新歌曲封面
+     * @Author: Kay
+     * @date:   2025/11/22 14:59
+     */
+    @Operation(summary = "更新歌曲封面")
+    @PatchMapping("/updateSongCover/{id}")
+    public Result updateSongCover(@PathVariable("id") Long songId, @RequestParam("cover") MultipartFile cover) {
+        String coverUrl = minioService.uploadFile(cover, "songCovers");  // 上传到 songCovers 目录
+        return songService.updateSongCover(songId, coverUrl);
+    }
+
+    /**
+     * @Description: 更新歌曲音频
+     * @Author: Kay
+     * @date:   2025/11/22 15:02
+     */
+    @Operation(summary = "更新歌曲音频")
+    @PatchMapping("/updateSongAudio/{id}")
+    public Result updateSongAudio(@PathVariable("id") Long songId, @RequestParam("audio") MultipartFile audio, @RequestParam("duration") String duration) {
+        String audioUrl = minioService.uploadFile(audio, "songs");  // 上传到 songs 目录
+        return songService.updateSongAudio(songId, audioUrl, duration);
+    }
+
+
+    /**
+     * @Description: 删除歌曲
+     * @Author: Kay
+     * @date:   2025/11/22 15:03
+     */
+    @Operation(summary = "删除歌曲")
+    @DeleteMapping("/deleteSong/{id}")
+    public Result deleteSong(@PathVariable("id") Long songId) {
+        return songService.deleteSong(songId);
+    }
+
+    /**
+     * @Description: 批量删除歌曲
+     * @Author: Kay
+     * @date:   2025/11/22 15:04
+     */
+    @Operation(summary = "批量删除歌曲")
+    @DeleteMapping("/deleteSongs")
+    public Result deleteSongs(@RequestBody List<Long> songIds) {
+        return songService.deleteSongs(songIds);
+    }
+
+    /**********************************************************************************************/
+
+
 
 
 }

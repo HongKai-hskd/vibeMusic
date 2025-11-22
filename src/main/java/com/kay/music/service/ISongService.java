@@ -36,4 +36,12 @@ public interface ISongService extends IService<Song> {
     Result addSong(SongAddDTO songAddDTO);
 
     Result updateSong(SongUpdateDTO songUpdateDTO);
+
+    Result updateSongCover(Long songId, String coverUrl);
+
+    Result updateSongAudio(Long songId, String audioUrl, String duration);
+
+    Result deleteSong(Long songId);
+
+    Result deleteSongs(List<Long> songIds);
 }

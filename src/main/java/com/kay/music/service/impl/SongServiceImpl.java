@@ -26,6 +26,7 @@ import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import com.kay.music.service.ISongService;
+import com.kay.music.service.MinioService;
 import com.kay.music.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +56,7 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
     private final RedisTemplate redisTemplate;
     private final StyleMapper styleMapper;
     private final GenreMapper genreMapper;
+    private final MinioService minioService;
 
     /**
      * @Description: 游客版：只需要歌曲列表 + 默认 likeStatus = DEFAULT , 结果对所有“未登录用户”通用，可以全局缓存
@@ -358,5 +360,112 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
     }
 
+    /**
+     * @Description: 更新歌曲封面
+     * @Author: Kay
+     * @date:   2025/11/22 15:01
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result updateSongCover(Long songId, String coverUrl) {
+        Song song = songMapper.selectById(songId);
+        String cover = song.getCoverUrl();
+        if (cover != null && !cover.isEmpty()) {
+            minioService.deleteFile(cover);
+        }
+
+        song.setCoverUrl(coverUrl);
+        if (songMapper.updateById(song) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 更新歌曲音频
+     * @Author: Kay
+     * @date:   2025/11/22 15:02
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result updateSongAudio(Long songId, String audioUrl, String duration) {
+        Song song = songMapper.selectById(songId);
+        String audio = song.getAudioUrl();
+        if (audio != null && !audio.isEmpty()) {
+            minioService.deleteFile(audio);
+        }
+
+        song.setAudioUrl(audioUrl).setDuration(duration);
+        if (songMapper.updateById(song) == 0) {
+            return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
+        }
+
+        return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 删除歌曲
+     * @Author: Kay
+     * @date:   2025/11/22 15:04
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result deleteSong(Long songId) {
+        Song song = songMapper.selectById(songId);
+        if (song == null) {
+            return Result.error(MessageConstant.SONG + MessageConstant.NOT_FOUND);
+        }
+        String cover = song.getCoverUrl();
+        String audio = song.getAudioUrl();
+
+        if (cover != null && !cover.isEmpty()) {
+            minioService.deleteFile(cover);
+        }
+        if (audio != null && !audio.isEmpty()) {
+            minioService.deleteFile(audio);
+        }
+
+        if (songMapper.deleteById(songId) == 0) {
+            return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
+        }
+
+        return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
+
+    /**
+     * @Description: 批量删除歌曲
+     * @Author: Kay
+     * @date:   2025/11/22 15:05
+     */
+    @Override
+    @CacheEvict(cacheNames = "songCache", allEntries = true)
+    public Result deleteSongs(List<Long> songIds) {
+        // 1. 查询歌曲信息，获取歌曲封面 URL 列表
+        List<Song> songs = songMapper.selectByIds(songIds);
+        List<String> coverUrlList = songs.stream()
+                .map(Song::getCoverUrl)
+                .filter(coverUrl -> coverUrl != null && !coverUrl.isEmpty())
+                .toList();
+        List<String> audioUrlList = songs.stream()
+                .map(Song::getAudioUrl)
+                .filter(audioUrl -> audioUrl != null && !audioUrl.isEmpty())
+                .toList();
+
+        // 2. 先删除 MinIO 里的歌曲封面和音频文件
+        for (String coverUrl : coverUrlList) {
+            minioService.deleteFile(coverUrl);
+        }
+        for (String audioUrl : audioUrlList) {
+            minioService.deleteFile(audioUrl);
+        }
+
+        // 3. 删除数据库中的歌曲信息
+        if (songMapper.deleteByIds(songIds) == 0) {
+            return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
+        }
+
+        return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
 
 }
