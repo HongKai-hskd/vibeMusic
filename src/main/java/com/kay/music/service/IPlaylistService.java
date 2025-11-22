@@ -5,8 +5,11 @@ import com.kay.music.pojo.dto.PlaylistAddDTO;
 import com.kay.music.pojo.dto.PlaylistDTO;
 import com.kay.music.pojo.dto.PlaylistUpdateDTO;
 import com.kay.music.pojo.entity.Playlist;
+import com.kay.music.pojo.vo.PlaylistDetailVO;
+import com.kay.music.pojo.vo.PlaylistVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -28,4 +31,10 @@ public interface IPlaylistService extends IService<Playlist> {
     Result deletePlaylist(Long playlistId);
 
     Result deletePlaylists(List<Long> playlistIds);
+
+    Result<PageResult<PlaylistVO>> getAllPlaylists(PlaylistDTO playlistDTO);
+
+    Result<List<PlaylistVO>> getRecommendedPlaylists(HttpServletRequest request);
+
+    Result<PlaylistDetailVO> getPlaylistDetail(Long playlistId, HttpServletRequest request);
 }
