@@ -98,4 +98,11 @@ public interface SongMapper extends BaseMapper<Song> {
                 ORDER BY s.release_time DESC
             """)
     IPage<SongAdminVO> getSongsWithArtistName(Page<SongAdminVO> page, Long artistId, String songName, String album);
+
+    // 根据用户收藏的歌曲id列表获取歌曲列表
+    IPage<SongVO> getSongsByIds(Page<SongVO> page,
+                                @Param("songIds") List<Long> songIds,
+                                @Param("songName") String songName,
+                                @Param("artistName") String artistName,
+                                @Param("album") String album);
 }
