@@ -7,19 +7,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.LikeStatusEnum;
-import com.kay.music.enumeration.RoleEnum;
-import com.kay.music.mapper.GenreMapper;
-import com.kay.music.mapper.SongMapper;
-import com.kay.music.mapper.StyleMapper;
-import com.kay.music.mapper.UserFavoriteMapper;
+import com.kay.music.mapper.*;
 import com.kay.music.pojo.dto.SongAddDTO;
 import com.kay.music.pojo.dto.SongAndArtistDTO;
 import com.kay.music.pojo.dto.SongDTO;
 import com.kay.music.pojo.dto.SongUpdateDTO;
-import com.kay.music.pojo.entity.Genre;
-import com.kay.music.pojo.entity.Song;
-import com.kay.music.pojo.entity.Style;
-import com.kay.music.pojo.entity.UserFavorite;
+import com.kay.music.pojo.entity.*;
 import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
@@ -30,13 +23,26 @@ import com.kay.music.service.MinioService;
 import com.kay.music.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.TagException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -49,6 +55,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "songCache")
+@Slf4j
 public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements ISongService {
 
     private final SongMapper songMapper;
@@ -57,6 +64,7 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
     private final StyleMapper styleMapper;
     private final GenreMapper genreMapper;
     private final MinioService minioService;
+    private final ArtistMapper artistMapper;
 
     /**
      * @Description: 游客版：只需要歌曲列表 + 默认 likeStatus = DEFAULT , 结果对所有“未登录用户”通用，可以全局缓存
@@ -466,6 +474,145 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         }
 
         return Result.success(MessageConstant.DELETE + MessageConstant.SUCCESS);
+    }
+
+    @Override
+    @CacheEvict(cacheNames = {"songCache", "artistCache"}, allEntries = true)
+    public Result addSongByFile(MultipartFile audio) {
+        if (audio.isEmpty()) {
+            return Result.error("上传的文件为空");
+        }
+        addSongByFileFunction(audio);
+        return Result.success("文件处理成功，信息已输出");
+    }
+
+    @Override
+    @CacheEvict(cacheNames = {"songCache", "artistCache"}, allEntries = true)
+    public Result batchAddSongByFile(MultipartFile[] audios) {
+        for (MultipartFile audio : audios) {
+            addSongByFileFunction(audio);
+        }
+        // 返回操作成功的结果
+        return Result.success("文件处理成功，信息已输出");
+    }
+
+    private void addSongByFileFunction(MultipartFile audio){
+        try {
+
+            String audioUrl = minioService.uploadFile(audio, "songs");
+
+            // 获取上传文件的原始文件名
+            String originalFilename = audio.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                return;
+                // return Result.error("文件名为空");
+            }
+
+            // 获取文件的扩展名，确保是支持的音频格式（比如 mp3, flac, wav）
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            if (!extension.equalsIgnoreCase(".mp3") && !extension.equalsIgnoreCase(".flac") && !extension.equalsIgnoreCase(".wav")) {
+                // return Result.error("不支持的文件格式");
+                return;
+            }
+
+            // 1. 创建临时文件并添加正确的扩展名
+            File tempFile = File.createTempFile("temp_audio", extension);
+
+            // 2. 将上传的文件内容复制到临时文件
+            audio.transferTo(tempFile);
+
+            // 3. 使用 jaudiotagger 读取音频文件标签
+            AudioFile audioFile = AudioFileIO.read(tempFile);
+            org.jaudiotagger.tag.Tag tag = audioFile.getTag();
+
+            // 4. 读取 ID3 标签（标题、艺术家、专辑等）
+            if (tag != null) {
+                String title = tag.getFirst(FieldKey.TITLE);
+                String artistName = tag.getFirst(FieldKey.ARTIST);
+                String album = tag.getFirst(FieldKey.ALBUM);
+                String genre = tag.getFirst(FieldKey.GENRE);
+                String trackStr = tag.getFirst(FieldKey.TRACK);
+                String yearStr = tag.getFirst(FieldKey.YEAR);
+
+                // 如果 title 为空，则使用文件名去除扩展名作为标题
+                if (title == null || title.isEmpty()) {
+                    title = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+                }
+
+                // 5. 使用 log 输出标签信息
+                log.info("Title: {}", title != null ? title : "N/A");
+                log.info("Artist: {}", artistName != null ? artistName : "N/A");
+                log.info("Album: {}", album != null ? album : "N/A");
+                log.info("Genre: {}", genre != null ? genre : "N/A");
+                log.info("Track: {}", trackStr != null ? trackStr : "N/A");
+                log.info("Year: {}", yearStr != null ? yearStr : "N/A");
+
+                // 6. 获取歌曲时长（秒数）
+                long durationMillis = audioFile.getAudioHeader().getTrackLength() * 1000L;
+                long minutes = durationMillis / 60000;
+                long seconds = (durationMillis % 60000) / 1000;
+                log.info("Duration: {} minutes {} seconds", minutes, seconds);
+
+
+                // 1. 查找有无歌手信息 ， 获取 歌手 id
+                Artist artist = artistMapper.selectOne(new LambdaQueryWrapper<Artist>().eq(Artist::getArtistName, artistName));
+                // 1.1 有则 获取 id
+                Long artistId;
+                if ( artist != null ) {
+                    artistId = artist.getArtistId();
+                } else {
+                    // 1.2 无则 手动插入 并获取 id
+                    Artist newArtist = new Artist().setArtistName(artistName);
+                    artistMapper.insert(newArtist);
+                    artistId = newArtist.getArtistId();
+                }
+
+                // 2. 组装已有信息
+                Song song = new Song()
+                        .setSongName(title)
+                        .setArtistId(artistId)
+                        .setAlbum(album)
+                        .setAudioUrl(audioUrl)
+                        .setReleaseTime(parseYearToLocalDate(yearStr)) // 将年份转换为 LocalDate
+                        .setDuration(formatDuration(durationMillis)); // 将时长格式化为字符串
+
+                // 3. 插入信息
+                songMapper.insert(song);
+
+
+
+            } else {
+                log.info("No ID3 tags found in the file.");
+            }
+
+            // 删除临时文件
+            tempFile.delete();
+
+
+        } catch (IOException | org.jaudiotagger.audio.exceptions.CannotReadException e) {
+            e.printStackTrace();
+        } catch (TagException | InvalidAudioFrameException | ReadOnlyFileException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // 将年份字符串转换为 LocalDate，若无效则返回当前日期
+    private LocalDate parseYearToLocalDate(String yearStr) {
+        try {
+            if (yearStr != null && !yearStr.isEmpty()) {
+                return LocalDate.parse(yearStr + "-01-01", DateTimeFormatter.ISO_DATE); // 使用默认的01-01作为日期
+            }
+        } catch (DateTimeParseException e) {
+            // 如果解析失败，返回当前日期（可以根据需求修改为其他默认值）
+            return LocalDate.now();
+        }
+        return LocalDate.now(); // 如果 yearStr 为 null 或空，则返回当前日期
+    }
+
+    // 将时长（毫秒）转换为字符串格式，保留两位小数
+    private String formatDuration(long durationMillis) {
+        double durationSeconds = durationMillis / 1000.0; // 转换为秒
+        return String.format("%.2f", durationSeconds); // 格式化为字符串
     }
 
 }

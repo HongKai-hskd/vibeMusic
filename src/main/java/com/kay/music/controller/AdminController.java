@@ -11,9 +11,6 @@ import com.kay.music.result.Result;
 import com.kay.music.service.*;
 import com.kay.music.utils.ThreadLocalUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -337,6 +334,19 @@ public class AdminController {
         String audioUrl = minioService.uploadFile(audio, "songs");  // 上传到 songs 目录
         return songService.updateSongAudio(songId, audioUrl, duration);
     }
+
+    @PostMapping("/addSongByFile")
+    @Operation(summary = "通过音频文件添加歌曲信息")
+    public Result addSongByFile(@RequestParam("audio") MultipartFile audio) {
+        return songService.addSongByFile(audio);
+    }
+
+    @PostMapping("/batchAddSongByFile")
+    @Operation(summary = "批量通过音频文件添加歌曲信息")
+    public Result batchAddSongByFile(@RequestParam("audio") MultipartFile[] audios) {
+        return songService.batchAddSongByFile(audios);
+    }
+
 
 
     /**

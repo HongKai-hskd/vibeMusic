@@ -12,6 +12,7 @@ import com.kay.music.pojo.vo.SongVO;
 import com.kay.music.result.PageResult;
 import com.kay.music.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,4 +45,8 @@ public interface ISongService extends IService<Song> {
     Result deleteSong(Long songId);
 
     Result deleteSongs(List<Long> songIds);
+
+    Result addSongByFile(MultipartFile audio);
+
+    Result batchAddSongByFile(MultipartFile[] audios);
 }
