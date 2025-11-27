@@ -1,5 +1,6 @@
 package com.kay.music.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -45,12 +46,12 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     public Result<PageResult<Banner>> getAllBanners(BannerDTO bannerDTO) {
         // 分页查询
         Page<Banner> page = new Page<>(bannerDTO.getPageNum(), bannerDTO.getPageSize());
-        QueryWrapper<Banner> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Banner> queryWrapper = new LambdaQueryWrapper<>();
         if (bannerDTO.getBannerStatus() != null) {
-            queryWrapper.eq("status", bannerDTO.getBannerStatus().getId());
+            queryWrapper.eq(Banner::getBannerStatus, bannerDTO.getBannerStatus().getId());
         }
         // 倒序排序
-        queryWrapper.orderByDesc("id");
+        queryWrapper.orderByDesc(Banner::getBannerId);
 
         IPage<Banner> bannerPage = bannerMapper.selectPage(page, queryWrapper);
         if (bannerPage.getRecords().isEmpty()) {
