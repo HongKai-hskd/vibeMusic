@@ -1,5 +1,6 @@
 package com.kay.music.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -56,9 +57,9 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      */
     @Override
     public Result<Long> getAllPlaylistsCount(String style) {
-        QueryWrapper<Playlist> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Playlist> queryWrapper = new LambdaQueryWrapper<>();
         if (style != null) {
-            queryWrapper.eq("style", style);
+            queryWrapper.eq(Playlist::getStyle, style);
         }
 
         return Result.success(playlistMapper.selectCount(queryWrapper));
@@ -74,16 +75,16 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     public Result<PageResult<Playlist>> getAllPlaylistsInfo(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
-        QueryWrapper<Playlist> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Playlist> queryWrapper = new LambdaQueryWrapper<>();
         // 根据 playlistDTO 的条件构建查询条件
         if (playlistDTO.getTitle() != null) {
-            queryWrapper.like("title", playlistDTO.getTitle());
+            queryWrapper.like(Playlist::getTitle, playlistDTO.getTitle());
         }
         if (playlistDTO.getStyle() != null) {
-            queryWrapper.eq("style", playlistDTO.getStyle());
+            queryWrapper.eq(Playlist::getStyle, playlistDTO.getStyle());
         }
         // 倒序排序
-        queryWrapper.orderByDesc("id");
+        queryWrapper.orderByDesc(Playlist::getPlaylistId);
 
         IPage<Playlist> playlistPage = playlistMapper.selectPage(page, queryWrapper);
         if (playlistPage.getRecords().isEmpty()) {

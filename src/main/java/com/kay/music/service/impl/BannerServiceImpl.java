@@ -1,7 +1,6 @@
 package com.kay.music.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -189,9 +188,9 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     @Cacheable(key = "'bannerList'")
     public Result<List<BannerVO>> getBannerList() {
         // 获取最后九个有效的轮播图
-        List<Banner> banners = bannerMapper.selectList(new QueryWrapper<Banner>()
-                .eq("status", BannerStatusEnum.ENABLE.getId())
-                .orderByDesc("id")
+        List<Banner> banners = bannerMapper.selectList(new LambdaQueryWrapper<Banner>()
+                .eq(Banner::getBannerStatus, BannerStatusEnum.ENABLE.getId())
+                .orderByDesc(Banner::getBannerId)
                 .last("limit 9"));
 
         // 转换为VO

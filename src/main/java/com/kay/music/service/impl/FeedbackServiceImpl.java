@@ -1,6 +1,6 @@
 package com.kay.music.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -44,12 +44,12 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
     public Result<PageResult<Feedback>> getAllFeedbacks(FeedbackDTO feedbackDTO) {
         // 分页查询
         Page<Feedback> page = new Page<>(feedbackDTO.getPageNum(), feedbackDTO.getPageSize());
-        QueryWrapper<Feedback> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Feedback> queryWrapper = new LambdaQueryWrapper<>();
         if (feedbackDTO.getKeyword() != null) {
-            queryWrapper.like("feedback", feedbackDTO.getKeyword());
+            queryWrapper.like(Feedback::getFeedback, feedbackDTO.getKeyword());
         }
         // 倒序排序
-        queryWrapper.orderByDesc("create_time");
+        queryWrapper.orderByDesc(Feedback::getCreateTime);
 
         IPage<Feedback> feedbackPage = feedbackMapper.selectPage(page, queryWrapper);
         if (feedbackPage.getRecords().isEmpty()) {
