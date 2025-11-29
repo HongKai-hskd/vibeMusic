@@ -1,6 +1,7 @@
 package com.kay.music.pojo.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
  * @date 2025/11/21 21:48
  */
 @Data
+@Schema(name = "SongUpdateDTO", description = "歌曲更新DTO类")
 public class SongUpdateDTO implements Serializable {
 
     @Serial
@@ -20,31 +22,37 @@ public class SongUpdateDTO implements Serializable {
     /**
      * 歌曲 id
      */
+    @Schema(description = "歌曲id", example = "1")
     private Long songId;
 
     /**
      * 歌手 id
      */
+    @Schema(description = "歌手id", example = "1")
     private Long artistId;
 
     /**
      * 歌名
      */
+    @Schema(description = "歌曲名称", example = "晴天")
     private String songName;
 
     /**
      * 专辑
      */
+    @Schema(description = "专辑名称", example = "叶惠美")
     private String album;
 
     /**
      * 歌曲风格
      */
+    @Schema(description = "歌曲风格", example = "流行")
     private String style;
 
     /**
      * 歌曲发行时间
      */
+    @Schema(description = "歌曲发行时间", example = "2003-07-31")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate releaseTime;
 
