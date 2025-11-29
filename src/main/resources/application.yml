@@ -76,6 +76,7 @@ role-path-permissions:
       - "/comment/"
       - "/banner/"
       - "/feedback/"
+      - "/playlist-binding/"
     ROLE_USER:
       - "/user/"
       - "/playlist/"
@@ -85,6 +86,7 @@ role-path-permissions:
       - "/comment/"
       - "/banner/"
       - "/feedback/"
+      - "/playlist-binding/"
 
 
 # springdoc-openapi项目配置

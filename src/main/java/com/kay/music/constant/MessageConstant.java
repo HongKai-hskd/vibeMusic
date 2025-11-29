@@ -44,7 +44,7 @@ public class MessageConstant {
     public static final String UNKNOWN_ERROR = "未知错误";
 
     public static final String ACCOUNT_LOCKED = "账号被锁定";
-    public static final String NO_PERMISSION = "您没有权限访问此资源";
+    public static final String NO_PERMISSION = "当前角色没有权限访问此资源";
     public static final String NOT_LOGIN = "未登录，请先登录";
     public static final String SESSION_EXPIRED = "会话过期，请重新登录";
     public static final String NOT_PERMISSION_UPDATE = "没有权限修改信息";

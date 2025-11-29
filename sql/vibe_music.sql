@@ -119,7 +119,10 @@ CREATE TABLE `tb_playlist`  (
   `cover_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '歌单封面',
   `introduction` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '歌单简介',
   `style` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '歌单风格',
-  PRIMARY KEY (`id`) USING BTREE
+  `user_id` bigint(0) NOT NULL COMMENT '创建者用户 id',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `fk_playlist_user_id`(`user_id`) USING BTREE,
+  CONSTRAINT `fk_playlist_user_id` FOREIGN KEY (`user_id`) REFERENCES `tb_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------

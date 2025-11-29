@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.LikeStatusEnum;
+import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.mapper.PlaylistMapper;
 import com.kay.music.mapper.UserFavoriteMapper;
 import com.kay.music.pojo.dto.PlaylistAddDTO;
@@ -108,8 +109,15 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
             return Result.error(MessageConstant.PLAYLIST + MessageConstant.ALREADY_EXISTS);
         }
 
+        // 获取当前登录用户 ID
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        if (currentUserId == null) {
+            return Result.error("请先登录");
+        }
+
         Playlist playlist = new Playlist();
         BeanUtils.copyProperties(playlistAddDTOO, playlist);
+        playlist.setUserId(currentUserId); // 设置创建者 ID
         playlistMapper.insert(playlist);
 
         return Result.success(MessageConstant.ADD + MessageConstant.SUCCESS);
@@ -124,6 +132,26 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     @CacheEvict(cacheNames = "playlistCache", allEntries = true)
     public Result updatePlaylist(PlaylistUpdateDTO playlistUpdateDTO) {
         Long playlistId = playlistUpdateDTO.getPlaylistId();
+
+        // 获取当前登录用户 ID
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        if (currentUserId == null) {
+            return Result.error("请先登录");
+        }
+
+        // 验证是否为创建者或管理员
+        Playlist existingPlaylist = playlistMapper.selectById(playlistId);
+        if (existingPlaylist == null) {
+            return Result.error(MessageConstant.PLAYLIST + MessageConstant.NOT_FOUND);
+        }
+        
+        String role = ThreadLocalUtil.getRole();
+        boolean isAdmin = RoleEnum.ADMIN.getRole().equals(role);
+        boolean isCreator = currentUserId.equals(existingPlaylist.getUserId());
+        
+        if (!isAdmin && !isCreator) {
+            return Result.error("只有歌单创建者或管理员才能修改歌单");
+        }
 
         Playlist playlistByTitle = playlistMapper.selectOne(new QueryWrapper<Playlist>().eq("title", playlistUpdateDTO.getTitle()));
         if (playlistByTitle != null && !playlistByTitle.getPlaylistId().equals(playlistId)) {
@@ -147,7 +175,26 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     @Override
     @CacheEvict(cacheNames = "playlistCache", allEntries = true)
     public Result updatePlaylistCover(Long playlistId, String coverUrl) {
+        // 获取当前登录用户 ID
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        if (currentUserId == null) {
+            return Result.error("请先登录");
+        }
+
         Playlist playlist = playlistMapper.selectById(playlistId);
+        if (playlist == null) {
+            return Result.error(MessageConstant.PLAYLIST + MessageConstant.NOT_FOUND);
+        }
+
+        // 验证是否为创建者或管理员
+        String role = ThreadLocalUtil.getRole();
+        boolean isAdmin = RoleEnum.ADMIN.getRole().equals(role);
+        boolean isCreator = currentUserId.equals(playlist.getUserId());
+        
+        if (!isAdmin && !isCreator) {
+            return Result.error("只有歌单创建者或管理员才能修改歌单封面");
+        }
+
         String cover = playlist.getCoverUrl();
         if (cover != null && !cover.isEmpty()) {
             minioService.deleteFile(cover);
@@ -165,11 +212,27 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     @Override
     @CacheEvict(cacheNames = "playlistCache", allEntries = true)
     public Result deletePlaylist(Long playlistId) {
+        // 获取当前登录用户 ID
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        if (currentUserId == null) {
+            return Result.error("请先登录");
+        }
+
         // 1. 查询歌单信息，获取封面 URL
         Playlist playlist = playlistMapper.selectById(playlistId);
         if (playlist == null) {
             return Result.error(MessageConstant.PLAYLIST + MessageConstant.NOT_FOUND);
         }
+
+        // 验证是否为创建者或管理员
+        String role = ThreadLocalUtil.getRole();
+        boolean isAdmin = RoleEnum.ADMIN.getRole().equals(role);
+        boolean isCreator = currentUserId.equals(playlist.getUserId());
+        
+        if (!isAdmin && !isCreator) {
+            return Result.error("只有歌单创建者或管理员才能删除歌单");
+        }
+
         String coverUrl = playlist.getCoverUrl();
 
         // 2. 先删除 MinIO 里的封面文件
@@ -188,7 +251,26 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     @Override
     @CacheEvict(cacheNames = "playlistCache", allEntries = true)
     public Result deletePlaylists(List<Long> playlistIds) {
+        // 获取当前登录用户 ID
+        Long currentUserId = ThreadLocalUtil.getUserId();
+        if (currentUserId == null) {
+            return Result.error("请先登录");
+        }
+
         List<Playlist> playlists = playlistMapper.selectBatchIds(playlistIds);
+        
+        // 验证所有歌单是否都是当前用户创建的或用户是管理员
+        String role = ThreadLocalUtil.getRole();
+        boolean isAdmin = RoleEnum.ADMIN.getRole().equals(role);
+        
+        if (!isAdmin) {
+            for (Playlist playlist : playlists) {
+                if (!currentUserId.equals(playlist.getUserId())) {
+                    return Result.error("只有歌单创建者或管理员才能删除歌单，歌单 [" + playlist.getTitle() + "] 不属于您");
+                }
+            }
+        }
+        
         List<String> coverUrlList = playlists.stream()
                 .map(Playlist::getCoverUrl)
                 .filter(coverUrl -> coverUrl != null && !coverUrl.isEmpty())
