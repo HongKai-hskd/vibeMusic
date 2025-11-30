@@ -49,12 +49,6 @@ public class Playlist implements Serializable {
     private String introduction;
 
     /**
-     * 歌单风格
-     */
-    @TableField("style")
-    private String style;
-
-    /**
      * 创建者用户 id
      */
     @TableField("user_id")

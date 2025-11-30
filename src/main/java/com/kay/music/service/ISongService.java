@@ -30,7 +30,7 @@ public interface ISongService extends IService<Song> {
 
     Result<SongDetailVO> getSongDetail(Long songId, HttpServletRequest request);
 
-    Result<Long> getAllSongsCount(String style);
+    Result<Long> getAllSongsCount();
 
     Result<PageResult<SongAdminVO>> getAllSongsByArtist(SongAndArtistDTO songDTO);
 

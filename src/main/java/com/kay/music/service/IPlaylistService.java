@@ -18,7 +18,7 @@ import java.util.List;
  * @date 2025/11/22 15:07
  */
 public interface IPlaylistService extends IService<Playlist> {
-    Result<Long> getAllPlaylistsCount(String style);
+    Result<Long> getAllPlaylistsCount();
 
     Result<PageResult<Playlist>> getAllPlaylistsInfo(PlaylistDTO playlistDTO);
 

@@ -52,10 +52,6 @@ public class Song implements Serializable {
     @Schema(description = "歌曲时长" , example = "3:40")
     private String duration;
 
-    @TableField("style")
-    @Schema(description = "歌曲风格" , example = "emo")
-    private String style;
-
     @TableField("cover_url")
     @Schema(description = "歌曲封面 url" , example = ".....")
     private String coverUrl;

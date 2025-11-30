@@ -65,14 +65,6 @@ public interface SongMapper extends BaseMapper<Song> {
             """)
     List<SongVO> getRandomSongsWithArtist();
 
-    // 根据用户收藏的歌曲id列表获取歌曲列表
-    List<Long> getFavoriteSongStyles(@Param("favoriteSongIds") List<Long> favoriteSongIds);
-
-    // 根据用户收藏的歌曲id列表获取歌曲列表
-    List<SongVO> getRecommendedSongsByStyles(@Param("sortedStyleIds") List<Long> sortedStyleIds,
-                                             @Param("favoriteSongIds") List<Long> favoriteSongIds,
-                                             @Param("limit") int limit);
-
     SongDetailVO getSongDetailById(Long songId);
 
     // 获取歌曲列表
@@ -84,7 +76,6 @@ public interface SongMapper extends BaseMapper<Song> {
                     s.album, 
                     s.lyric, 
                     s.duration, 
-                    s.style, 
                     s.cover_url AS coverUrl, 
                     s.audio_url AS audioUrl, 
                     s.release_time AS releaseTime, 

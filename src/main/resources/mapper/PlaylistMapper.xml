@@ -57,32 +57,6 @@
         WHERE p.id = #{playlistId}
     </select>
 
-    <!-- 获取用户收藏歌单的风格 -->
-    <select id="getFavoritePlaylistStyles" resultType="java.lang.String">
-        SELECT style
-        FROM tb_playlist
-        WHERE id IN
-        <foreach item="id" collection="favoritePlaylistIds" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </select>
-
-    <!-- 根据风格推荐歌单（排除已收藏歌单） -->
-    <select id="getRecommendedPlaylistsByStyles" resultType="com.kay.music.pojo.vo.PlaylistVO">
-        SELECT *
-        FROM tb_playlist
-        WHERE style IN
-        <foreach item="style" collection="sortedStyleIds" open="(" separator="," close=")">
-            #{style}
-        </foreach>
-        AND id NOT IN
-        <foreach item="id" collection="favoritePlaylistIds" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        ORDER BY RAND()
-        LIMIT #{limit}
-    </select>
-
     <!-- 根据歌单id列表查询歌单列表 -->
     <select id="getPlaylistsByIds" resultType="com.kay.music.pojo.vo.PlaylistVO">
         SELECT
@@ -100,9 +74,6 @@
         </if>
         <if test="title != null and title.trim() != ''">
             AND p.title LIKE CONCAT('%', #{title}, '%')
-        </if>
-        <if test="style != null and style.trim() != ''">
-            AND p.style LIKE CONCAT('%', #{style}, '%')
         </if>
         ORDER BY u.create_time DESC
     </select>

@@ -38,12 +38,6 @@ public class SongAddDTO implements Serializable {
     private String album;
 
     /**
-     * 歌曲风格
-     */
-    @Schema(description = "歌曲风格", example = "流行")
-    private String style;
-
-    /**
      * 歌曲发行时间
      */
     @Schema(description = "歌曲发行时间", example = "2003-07-31")

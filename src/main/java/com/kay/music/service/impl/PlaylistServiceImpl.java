@@ -32,9 +32,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -57,13 +55,8 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @date:   2025/11/22 15:11
      */
     @Override
-    public Result<Long> getAllPlaylistsCount(String style) {
-        LambdaQueryWrapper<Playlist> queryWrapper = new LambdaQueryWrapper<>();
-        if (style != null) {
-            queryWrapper.eq(Playlist::getStyle, style);
-        }
-
-        return Result.success(playlistMapper.selectCount(queryWrapper));
+    public Result<Long> getAllPlaylistsCount() {
+        return Result.success(playlistMapper.selectCount(null));
     }
     
     /**
@@ -72,7 +65,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @date:   2025/11/22 15:15
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-' + #playlistDTO.style + '-admin'")
+    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-admin'")
     public Result<PageResult<Playlist>> getAllPlaylistsInfo(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
@@ -80,9 +73,6 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
         // 根据 playlistDTO 的条件构建查询条件
         if (playlistDTO.getTitle() != null) {
             queryWrapper.like(Playlist::getTitle, playlistDTO.getTitle());
-        }
-        if (playlistDTO.getStyle() != null) {
-            queryWrapper.eq(Playlist::getStyle, playlistDTO.getStyle());
         }
         // 倒序排序
         queryWrapper.orderByDesc(Playlist::getPlaylistId);
@@ -296,7 +286,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @return 歌单列表
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-' + #playlistDTO.style")
+    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title")
     public Result<PageResult<PlaylistVO>> getAllPlaylists(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
@@ -304,9 +294,6 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
         // 根据 playlistDTO 的条件构建查询条件
         if (playlistDTO.getTitle() != null) {
             queryWrapper.like("title", playlistDTO.getTitle());
-        }
-        if (playlistDTO.getStyle() != null) {
-            queryWrapper.eq("style", playlistDTO.getStyle());
         }
 
         IPage<Playlist> playlistPage = playlistMapper.selectPage(page, queryWrapper);
@@ -325,7 +312,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
         return Result.success(new PageResult<>(playlistPage.getTotal(), playlistVOList));
     }
 
-    // TODO 推荐方式需要修改，这个太低级了
+    // TODO: 推荐方式需要修改，当前为随机推荐，后续可以基于用户收藏、播放历史等方式实现个性化推荐
     /**
      * 获取推荐歌单
      * 推荐歌单的数量为 10
@@ -335,51 +322,8 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      */
     @Override
     public Result<List<PlaylistVO>> getRecommendedPlaylists(HttpServletRequest request) {
-
-        threadLocalUtil.setThreadLocalByToken(request);
-
-        Long userId = ThreadLocalUtil.getUserId();
-
-        // 用户未登录，返回随机歌单
-        if (userId == null) {
-            return Result.success(playlistMapper.getRandomPlaylists(10));
-        }
-
-        // 获取用户收藏的歌单 ID
-        List<Long> favoritePlaylistIds = userFavoriteMapper.getFavoritePlaylistIdsByUserId(userId);
-        if (favoritePlaylistIds.isEmpty()) {
-            return Result.success(playlistMapper.getRandomPlaylists(10)); // 如果用户没有收藏歌单，返回随机歌单
-        }
-
-        // 查询用户收藏的歌单风格并统计频率
-        List<String> favoriteStyles = playlistMapper.getFavoritePlaylistStyles(favoritePlaylistIds);
-        List<Long> favoriteStyleIds = userFavoriteMapper.getFavoriteIdsByStyle(favoriteStyles);
-        Map<Long, Long> styleFrequency = favoriteStyleIds.stream()
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        // 按风格出现次数降序排序
-        List<Long> sortedStyleIds = styleFrequency.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        // 根据排序后的风格推荐歌单（排除已收藏歌单）
-        List<PlaylistVO> recommendedPlaylists = playlistMapper.getRecommendedPlaylistsByStyles(sortedStyleIds, favoritePlaylistIds, 10);
-
-        // 如果推荐的歌单不足 10 个，则用随机歌单填充
-        if (recommendedPlaylists.size() < 10) {
-            List<PlaylistVO> randomPlaylists = playlistMapper.getRandomPlaylists(10);
-            Set<Long> addedPlaylistIds = recommendedPlaylists.stream().map(PlaylistVO::getPlaylistId).collect(Collectors.toSet());
-
-            for (PlaylistVO playlist : randomPlaylists) {
-                if (recommendedPlaylists.size() >= 10) break;
-                if (!addedPlaylistIds.contains(playlist.getPlaylistId())) {
-                    recommendedPlaylists.add(playlist);
-                }
-            }
-        }
-
-        return Result.success(recommendedPlaylists);
+        // 目前简化为返回随机歌单
+        return Result.success(playlistMapper.getRandomPlaylists(10));
     }
 
     /**

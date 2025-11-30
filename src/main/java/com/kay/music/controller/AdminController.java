@@ -263,8 +263,8 @@ public class AdminController {
      */
     @Operation(summary = "获取所有歌曲的数量")
     @GetMapping("/getAllSongsCount")
-    public Result<Long> getAllSongsCount(@RequestParam(required = false) String style) {
-        return songService.getAllSongsCount(style);
+    public Result<Long> getAllSongsCount() {
+        return songService.getAllSongsCount();
     }
 
     /**
@@ -380,8 +380,8 @@ public class AdminController {
      */
     @Operation(summary = "获取所有歌单数量")
     @GetMapping("/getAllPlaylistsCount")
-    public Result<Long> getAllPlaylistsCount(@RequestParam(required = false) String style) {
-        return playlistService.getAllPlaylistsCount(style);
+    public Result<Long> getAllPlaylistsCount() {
+        return playlistService.getAllPlaylistsCount();
     }
 
     /**

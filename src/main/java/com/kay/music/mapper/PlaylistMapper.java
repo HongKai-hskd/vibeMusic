@@ -22,12 +22,6 @@ public interface PlaylistMapper extends BaseMapper<Playlist> {
     // 根据歌单id获取歌单详情
     PlaylistDetailVO getPlaylistDetailById(Long playlistId);
 
-    // 获取用户收藏歌单的风格
-    List<String> getFavoritePlaylistStyles(List<Long> favoritePlaylistIds);
-
-    // 根据风格推荐歌单（排除已收藏歌单）
-    List<PlaylistVO> getRecommendedPlaylistsByStyles(List<Long> sortedStyleIds, List<Long> favoritePlaylistIds, int limit);
-
     // 随机推荐歌单
     @Select("""
             SELECT 
@@ -45,6 +39,5 @@ public interface PlaylistMapper extends BaseMapper<Playlist> {
             Long userId,
             Page<PlaylistVO> page,
             @Param("playlistIds") List<Long> playlistIds,
-            @Param("title") String title,
-            @Param("style") String style);
+            @Param("title") String title);
 }

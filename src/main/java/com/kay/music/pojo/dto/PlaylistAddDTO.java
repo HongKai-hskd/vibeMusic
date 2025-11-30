@@ -29,10 +29,4 @@ public class PlaylistAddDTO implements Serializable {
     @Schema(description = "歌单简介", example = "收录华语经典歌曲")
     private String introduction;
 
-    /**
-     * 歌单风格
-     */
-    @Schema(description = "歌单风格", example = "流行")
-    private String style;
-
 }

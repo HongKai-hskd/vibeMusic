@@ -48,11 +48,6 @@ public class SongAdminVO implements Serializable {
     private String duration;
 
     /**
-     * 歌曲风格
-     */
-    private String style;
-
-    /**
      * 歌曲封面 url
      */
     private String coverUrl;

@@ -34,7 +34,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +43,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -60,9 +57,6 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
 
     private final SongMapper songMapper;
     private final UserFavoriteMapper userFavoriteMapper;
-    private final RedisTemplate redisTemplate;
-    private final StyleMapper styleMapper;
-    private final GenreMapper genreMapper;
     private final MinioService minioService;
     private final ArtistMapper artistMapper;
 
@@ -150,69 +144,11 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @Author: Kay
      * @date:   2025/11/20 23:32
      */
-    // TODO：当前的 sortedStyleIds 只是根据风格出现频率排序，
-    //       但实际 SQL 查询只使用了 IN (...)，不会根据排序影响候选歌曲权重。
-    //       后续需要将“风格权重”真正应用到推荐逻辑中，例如：
-    //       1) 按权重进行加权随机推荐，让风格出现概率与用户偏好一致。
-    //       2) 或在 SQL 中使用 CASE/FIELD 手动排序，让高权重风格优先返回。
-    //       3) 或分批按风格查询，按比例分配歌曲数量。
-    //       当前逻辑仍然能跑，但没有真正体现个性化权重，需要之后优化。
-
+    // TODO: 推荐方式需要修改，当前为随机推荐，后续可以基于用户行为、协同过滤等方式实现个性化推荐
     @Override
     public Result<List<SongVO>> getRecommendedSongs() {
-
-        Long userId = ThreadLocalUtil.getUserId();
-        // 1. 用户未登录，返回随机歌曲列表
-        if ( userId == null ) {
-            return Result.success(songMapper.getRandomSongsWithArtist());
-        }
-        // 2.1 查询用户收藏的歌曲 ID
-        List<Long> favoriteSongIds = userFavoriteMapper.getFavoriteSongIdsByUserId(userId);
-        // 2.2 如果查不到，则随机返回
-        if (favoriteSongIds.isEmpty()) {
-            return Result.success(songMapper.getRandomSongsWithArtist());
-        }
-
-        // 3. 根据用户收藏歌曲，查询用户收藏的歌曲风格，并统计频率
-        List<Long> favoriteStyleIds = songMapper.getFavoriteSongStyles(favoriteSongIds);
-        Map<Long, Long> styleFrequency = favoriteStyleIds.stream()
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        // 4. 按风格出现次数降序排序
-        List<Long> sortedStyleIds = styleFrequency.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        // 5. 从 Redis 获取缓存的推荐列表 ， range 0 , -1 :  “从头到尾所有元素”
-        String redisKey = "recommended_songs:" + userId;
-        List<SongVO> cachedSongs = redisTemplate.opsForList().range(redisKey, 0, -1);
-
-        // 如果 Redis 没有缓存，则查询数据库并缓存
-        if (cachedSongs == null || cachedSongs.isEmpty()) {
-            // 根据排序后的风格推荐歌曲（排除已收藏歌曲）
-            cachedSongs = songMapper.getRecommendedSongsByStyles(sortedStyleIds, favoriteSongIds, 80);
-            redisTemplate.opsForList().rightPushAll(redisKey, cachedSongs);
-            redisTemplate.expire(redisKey, 30, TimeUnit.MINUTES); // 设置过期时间 30 分钟
-        }
-
-        // 随机选取 20 首
-        Collections.shuffle(cachedSongs);
-        List<SongVO> recommendedSongs = cachedSongs.subList(0, Math.min(20, cachedSongs.size()));
-
-        // 如果推荐的歌曲不足 20 首，则用随机歌曲填充
-        if (recommendedSongs.size() < 20) {
-            List<SongVO> randomSongs = songMapper.getRandomSongsWithArtist();
-            Set<Long> addedSongIds = recommendedSongs.stream().map(SongVO::getSongId).collect(Collectors.toSet());
-            for (SongVO song : randomSongs) {
-                if (recommendedSongs.size() >= 20) break;
-                if (!addedSongIds.contains(song.getSongId())) {
-                    recommendedSongs.add(song);
-                }
-            }
-        }
-
-        return Result.success(recommendedSongs);
+        // 目前简化为随机推荐
+        return Result.success(songMapper.getRandomSongsWithArtist());
     }
 
     /**
@@ -247,13 +183,8 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @date:   2025/11/21 21:31
      */
     @Override
-    public Result<Long> getAllSongsCount(String style) {
-        LambdaQueryWrapper<Song> queryWrapper = new LambdaQueryWrapper<>();
-        if (style != null) {
-            queryWrapper.like(Song::getStyle, style);
-        }
-
-        return Result.success(songMapper.selectCount(queryWrapper));
+    public Result<Long> getAllSongsCount() {
+        return Result.success(songMapper.selectCount(null));
     }
 
     /**
@@ -301,23 +232,7 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         if (songInDB == null) {
             return Result.error(MessageConstant.SONG + MessageConstant.NOT_FOUND);
         }
-        Long songId = songInDB.getSongId();
-        // 解析风格字段（多个风格以逗号分隔）
-        String styleStr = songAddDTO.getStyle();
-        if (styleStr != null && !styleStr.isEmpty()) {
-            List<String> styles = Arrays.asList(styleStr.split(","));
 
-            // 查询风格 ID
-            List<Style> styleList = styleMapper.selectList(new QueryWrapper<Style>().in("name", styles));
-
-            // 插入到 tb_genre
-            for (Style style : styleList) {
-                Genre genre = new Genre();
-                genre.setSongId(songId);
-                genre.setStyleId(style.getStyleId());
-                genreMapper.insert(genre);
-            }
-        }
         return Result.success(MessageConstant.ADD + MessageConstant.SUCCESS);
     }
 
@@ -341,28 +256,6 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         BeanUtils.copyProperties(songUpdateDTO, song);
         if (songMapper.updateById(song) == 0) {
             return Result.error(MessageConstant.UPDATE + MessageConstant.FAILED);
-        }
-
-        Long songId = songUpdateDTO.getSongId();
-
-        // 删除 tb_genre 中该歌曲的原有风格映射
-        genreMapper.delete(new QueryWrapper<Genre>().eq("song_id", songId));
-
-        // 解析新的风格字段（多个风格以逗号分隔）
-        String styleStr = songUpdateDTO.getStyle();
-        if (styleStr != null && !styleStr.isEmpty()) {
-            List<String> styles = Arrays.asList(styleStr.split(","));
-
-            // 查询风格 ID
-            List<Style> styleList = styleMapper.selectList(new QueryWrapper<Style>().in("name", styles));
-
-            // 插入新的风格映射到 tb_genre
-            for (Style style : styleList) {
-                Genre genre = new Genre();
-                genre.setSongId(songId);
-                genre.setStyleId(style.getStyleId());
-                genreMapper.insert(genre);
-            }
         }
 
         return Result.success(MessageConstant.UPDATE + MessageConstant.SUCCESS);
@@ -530,7 +423,6 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
                 String title = tag.getFirst(FieldKey.TITLE);
                 String artistName = tag.getFirst(FieldKey.ARTIST);
                 String album = tag.getFirst(FieldKey.ALBUM);
-                String genre = tag.getFirst(FieldKey.GENRE);
                 String trackStr = tag.getFirst(FieldKey.TRACK);
                 String yearStr = tag.getFirst(FieldKey.YEAR);
 
@@ -543,7 +435,6 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
                 log.info("Title: {}", title != null ? title : "N/A");
                 log.info("Artist: {}", artistName != null ? artistName : "N/A");
                 log.info("Album: {}", album != null ? album : "N/A");
-                log.info("Genre: {}", genre != null ? genre : "N/A");
                 log.info("Track: {}", trackStr != null ? trackStr : "N/A");
                 log.info("Year: {}", yearStr != null ? yearStr : "N/A");
 

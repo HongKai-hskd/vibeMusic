@@ -30,7 +30,4 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
     // 查询用户收藏的所有歌单ID
     @Select("SELECT playlist_id FROM tb_user_favorite WHERE user_id = #{userId} AND type = 1")
     List<Long> getFavoritePlaylistIdsByUserId(@Param("userId") Long userId);
-
-    // 根据 style 查询对应的 id
-    List<Long> getFavoriteIdsByStyle(List<String> favoriteStyles);
 }

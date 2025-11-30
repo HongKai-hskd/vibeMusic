@@ -130,7 +130,7 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
      * @return 用户收藏的歌单列表
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-' + #playlistDTO.style")
+    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title")
     public Result<PageResult<PlaylistVO>> getUserFavoritePlaylists(PlaylistDTO playlistDTO) {
         Long userId = ThreadLocalUtil.getUserId();
 
@@ -146,8 +146,7 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
                 userId,
                 page,
                 favoritePlaylistIds,
-                playlistDTO.getTitle(),
-                playlistDTO.getStyle()
+                playlistDTO.getTitle()
         );
 
         return Result.success(new PageResult<>(playlistPage.getTotal(), playlistPage.getRecords()));
