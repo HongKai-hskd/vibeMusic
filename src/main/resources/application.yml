@@ -1,3 +1,6 @@
+server:
+  port: 8081
+
 spring:
   profiles:
     active: local  # 默认使用 local 配置，可改为 dev 或其他环境
@@ -7,8 +10,11 @@ spring:
       max-file-size: 100MB # 设置最大上传文件大小为100MB
       max-request-size: 1024MB # 设置最大请求大小为1024MB
 
-server:
-  port: 8081
+  # 配置数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
 
 # 配置 mybatis-plus
 mybatis-plus:

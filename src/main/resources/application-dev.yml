@@ -4,11 +4,9 @@
 spring:
   # 配置数据源
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://<your-db-host>:<your-db-port>/<your-database-name>?useUnicode=true&characterEncoding=utf-8&useSSL=false
     username: <your-db-username>
     password: <your-db-password>
-    type: com.alibaba.druid.pool.DruidDataSource
   
   # Redis服务连接配置
   data:
