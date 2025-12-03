@@ -36,3 +36,4 @@ build/
 # 忽略本地私有配置文件
 application-local.yml
 src/main/resources/application-local.yml
+user-front/
