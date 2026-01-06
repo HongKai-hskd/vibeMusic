@@ -22,7 +22,6 @@ import com.kay.music.result.Result;
 import com.kay.music.service.IArtistService;
 import com.kay.music.service.MinioService;
 import com.kay.music.utils.ThreadLocalUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;

@@ -7,6 +7,8 @@ package com.kay.music.constant;
  * @date 2026/01/06 21:08
  */
 public class RedisConstants {
+
+    public static final String PREFIX = "music:";
     /**
      * 登录用户 Redis key 前缀
      */
