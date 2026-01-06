@@ -73,7 +73,7 @@ public class ArtistServiceImpl extends ServiceImpl<ArtistMapper, Artist> impleme
      * @date:   2025/11/21 11:31
      */
     @Override
-    @Cacheable(key = "#artistDTO.pageNum + '-' + #artistDTO.pageSize + '-' + #artistDTO.artistName + '-' + #artistDTO.gender + '-' + #artistDTO.area + '-admin'")
+    @Cacheable(key = "'admin:artist:' + #artistDTO.pageNum + '-' + #artistDTO.pageSize + '-' + #artistDTO.artistName + '-' + #artistDTO.gender + '-' + #artistDTO.area", unless = "#result == null")
     public Result<PageResult<Artist>> getAllArtistsAndDetail(ArtistDTO artistDTO) {
 
         // 分页查询
@@ -235,7 +235,7 @@ public class ArtistServiceImpl extends ServiceImpl<ArtistMapper, Artist> impleme
      * @date:   2025/11/21 21:04
      */
     @Override
-    @Cacheable(key = "#artistDTO.pageNum + '-' + #artistDTO.pageSize + '-' + #artistDTO.artistName + '-' + #artistDTO.gender + '-' + #artistDTO.area")
+    @Cacheable(key = "'artist:list:' + #artistDTO.pageNum + '-' + #artistDTO.pageSize + '-' + #artistDTO.artistName + '-' + #artistDTO.gender + '-' + #artistDTO.area", unless = "#result == null")
     public Result<PageResult<ArtistVO>> getAllArtists(ArtistDTO artistDTO) {
         // 分页查询
         Page<Artist> page = new Page<>(artistDTO.getPageNum(), artistDTO.getPageSize());
@@ -299,11 +299,16 @@ public class ArtistServiceImpl extends ServiceImpl<ArtistMapper, Artist> impleme
      * @date:   2025/11/21 21:12
      */
     @Override
-    @Cacheable(key = "#artistId")
+    @Cacheable(key = "'artist:detail:' + #artistId", unless = "#result == null")
     public Result<ArtistDetailVO> getArtistDetail(Long artistId) {
 
         ArtistDetailVO artistDetailVO = artistMapper.getArtistDetailById(artistId);
-
+        
+        // 如果歌手不存在，返回空结果（也会被缓存，防止缓存穿透）
+        if (artistDetailVO == null) {
+            return Result.success(MessageConstant.ARTIST + MessageConstant.NOT_FOUND, null);
+        }
+        
         // 设置默认状态
         List<SongVO> songVOList = artistDetailVO.getSongs();
         songVOList.forEach(songVO -> songVO.setLikeStatus(LikeStatusEnum.DEFAULT.getId()));
@@ -338,10 +343,11 @@ public class ArtistServiceImpl extends ServiceImpl<ArtistMapper, Artist> impleme
      * @date:   2025/11/21 21:33
      */
     @Override
-    @Cacheable(key = "'allArtistNames'")
+    @Cacheable(key = "'artist:names'", unless = "#result == null")
     public Result<List<ArtistNameVO>> getAllArtistNames() {
         List<Artist> artists = artistMapper.selectList(new LambdaQueryWrapper<Artist>().orderByDesc(Artist::getArtistId));
         if (artists.isEmpty()) {
+            // 没有查到结果，返回空结果（也会被缓存，防止缓存穿透）
             return Result.success(MessageConstant.DATA_NOT_FOUND, null);
         }
 

@@ -49,7 +49,7 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
      * @return 用户收藏的歌曲列表
      */
     @Override
-    @Cacheable(key = "#songDTO.pageNum + '-' + #songDTO.pageSize + '-' + #songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album")
+    @Cacheable(key = "'user-favorite:songs:' + #songDTO.pageNum + '-' + #songDTO.pageSize + '-' + #songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album + '-' + T(com.kay.music.utils.ThreadLocalUtil).getUserId()", unless = "#result == null")
     public Result<PageResult<SongVO>> getUserFavoriteSongs(SongDTO songDTO) {
 
         Long userId = ThreadLocalUtil.getUserId();
@@ -57,7 +57,8 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
         // 获取用户收藏的歌曲 ID 列表
         List<Long> favoriteSongIds = userFavoriteMapper.getUserFavoriteSongIds(userId);
         if (favoriteSongIds.isEmpty()) {
-            return Result.success(new PageResult<>(0L, Collections.emptyList()));
+            // 没有查到收藏结果，返回空结果（也会被缓存，防止缓存穿透）
+            return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, Collections.emptyList()));
         }
 
         // 分页查询收藏的歌曲，支持模糊查询
@@ -130,14 +131,15 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
      * @return 用户收藏的歌单列表
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title")
+    @Cacheable(key = "'user-favorite:playlists:' + #playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-' + T(com.kay.music.utils.ThreadLocalUtil).getUserId()", unless = "#result == null")
     public Result<PageResult<PlaylistVO>> getUserFavoritePlaylists(PlaylistDTO playlistDTO) {
         Long userId = ThreadLocalUtil.getUserId();
 
         // 获取用户收藏的歌单 ID 列表
         List<Long> favoritePlaylistIds = userFavoriteMapper.getUserFavoritePlaylistIds(userId);
         if (favoritePlaylistIds.isEmpty()) {
-            return Result.success(new PageResult<>(0L, Collections.emptyList()));
+            // 没有查到收藏结果，返回空结果（也会被缓存，防止缓存穿透）
+            return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, Collections.emptyList()));
         }
 
         // 分页查询收藏的歌单，支持模糊查询

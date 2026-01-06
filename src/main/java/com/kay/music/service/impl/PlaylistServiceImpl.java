@@ -64,7 +64,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @date:   2025/11/22 15:15
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title + '-admin'")
+    @Cacheable(key = "'admin:playlist:' + #playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title", unless = "#result == null")
     public Result<PageResult<Playlist>> getAllPlaylistsInfo(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
@@ -285,7 +285,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @return 歌单列表
      */
     @Override
-    @Cacheable(key = "#playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title")
+    @Cacheable(key = "'playlist:list:' + #playlistDTO.pageNum + '-' + #playlistDTO.pageSize + '-' + #playlistDTO.title", unless = "#result == null")
     public Result<PageResult<PlaylistVO>> getAllPlaylists(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
@@ -320,9 +320,15 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @return 随机歌单列表
      */
     @Override
+    @Cacheable(key = "'playlist:recommended'", unless = "#result == null")
     public Result<List<PlaylistVO>> getRecommendedPlaylists(HttpServletRequest request) {
         // 目前简化为返回随机歌单
-        return Result.success(playlistMapper.getRandomPlaylists(10));
+        List<PlaylistVO> playlists = playlistMapper.getRandomPlaylists(10);
+        if (playlists == null || playlists.isEmpty()) {
+            // 返回空结果（也会被缓存，防止缓存穿透）
+            return Result.success(MessageConstant.DATA_NOT_FOUND, null);
+        }
+        return Result.success(playlists);
     }
 
     /**
@@ -333,10 +339,15 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
      * @return 歌单详情
      */
     @Override
-    @Cacheable(key = "#playlistId")
+    @Cacheable(key = "'playlist:detail:' + #playlistId", unless = "#result == null")
     public Result<PlaylistDetailVO> getPlaylistDetail(Long playlistId, HttpServletRequest request) {
         PlaylistDetailVO playlistDetailVO = playlistMapper.getPlaylistDetailById(playlistId);
-
+        
+        // 如果歌单不存在，返回空结果（也会被缓存，防止缓存穿透）
+        if (playlistDetailVO == null) {
+            return Result.success(MessageConstant.PLAYLIST + MessageConstant.NOT_FOUND, null);
+        }
+        
         // 设置默认状态
         List<SongVO> songVOList = playlistDetailVO.getSongs();
         songVOList.forEach(songVO -> songVO.setLikeStatus(LikeStatusEnum.DEFAULT.getId()));

@@ -70,8 +70,9 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @date:   2025/11/20 20:06
      */
     @Cacheable(
-            key = "#songDTO.pageNum + '-' + #songDTO.pageSize + '-' + " +
-                    "#songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album"
+            key = "'guest:' + #songDTO.pageNum + '-' + #songDTO.pageSize + '-' + " +
+                    "#songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album",
+            unless = "#result == null"
     )
     public Result<PageResult<SongVO>> getAllSongsForGuest(SongDTO songDTO) {
 
@@ -85,7 +86,7 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
                 songDTO.getArtistName(),
                 songDTO.getAlbum()
         );
-        // 1.2 没有查到
+        // 1.2 没有查到，返回空结果（也会被缓存，防止缓存穿透）
         if (songPage.getRecords().isEmpty()) {
             return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, null));
         }
@@ -103,8 +104,9 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @date:   2025/11/20 20:07
      */
     @Cacheable(
-            key = "#userId + '-' + #songDTO.pageNum + '-' + #songDTO.pageSize + '-' + " +
-                    "#songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album"
+            key = "'user:' + #userId + '-' + #songDTO.pageNum + '-' + #songDTO.pageSize + '-' + " +
+                    "#songDTO.songName + '-' + #songDTO.artistName + '-' + #songDTO.album",
+            unless = "#result == null"
     )
     public Result<PageResult<SongVO>> getAllSongsForUser(SongDTO songDTO, Long userId) {
 
@@ -117,6 +119,7 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
         );
 
         if (songPage.getRecords().isEmpty()) {
+            // 没有查到结果，返回空结果（也会被缓存，防止缓存穿透）
             return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, null));
         }
         // 2. 默认全部设置为 未点赞
@@ -150,9 +153,15 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      */
     // TODO: 推荐方式需要修改，当前为随机推荐，后续可以基于用户行为、协同过滤等方式实现个性化推荐
     @Override
+    @Cacheable(key = "'recommended'", unless = "#result == null")
     public Result<List<SongVO>> getRecommendedSongs() {
         // 目前简化为随机推荐
-        return Result.success(songMapper.getRandomSongsWithArtist());
+        List<SongVO> recommendedSongs = songMapper.getRandomSongsWithArtist();
+        if (recommendedSongs == null || recommendedSongs.isEmpty()) {
+            // 返回空结果（也会被缓存，防止缓存穿透）
+            return Result.success(MessageConstant.DATA_NOT_FOUND, null);
+        }
+        return Result.success(recommendedSongs);
     }
 
     /**
@@ -161,9 +170,15 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @date:   2025/11/21 10:34
      */
     @Override
+    @Cacheable(key = "'song:detail:' + #songId", unless = "#result == null")
     public Result<SongDetailVO> getSongDetail(Long songId, HttpServletRequest request) {
 
         SongDetailVO songDetailVO = songMapper.getSongDetailById(songId);
+        
+        // 如果歌曲不存在，返回空结果（也会被缓存，防止缓存穿透）
+        if (songDetailVO == null) {
+            return Result.success(MessageConstant.SONG + MessageConstant.NOT_FOUND, null);
+        }
 
         // 如果用户登录了，需要额外操作 ( 设置 这首歌 是否被用户 点赞)
         Long userId = ThreadLocalUtil.getUserId();
@@ -197,13 +212,14 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
      * @date:   2025/11/21 21:36
      */
     @Override
-    @Cacheable(key = "#songDTO.pageNum + '-' + #songDTO.pageSize + '-' + #songDTO.songName + '-' + #songDTO.album + '-' + #songDTO.artistId")
+    @Cacheable(key = "'artist-songs:' + #songDTO.pageNum + '-' + #songDTO.pageSize + '-' + #songDTO.songName + '-' + #songDTO.album + '-' + #songDTO.artistId", unless = "#result == null")
     public Result<PageResult<SongAdminVO>> getAllSongsByArtist(SongAndArtistDTO songDTO) {
         // 分页查询
         Page<SongAdminVO> page = new Page<>(songDTO.getPageNum(), songDTO.getPageSize());
         IPage<SongAdminVO> songPage = songMapper.getSongsWithArtistName(page, songDTO.getArtistId(), songDTO.getSongName(), songDTO.getAlbum());
 
         if (songPage.getRecords().isEmpty()) {
+            // 缓存空结果，防止缓存穿透
             return Result.success(MessageConstant.DATA_NOT_FOUND, new PageResult<>(0L, null));
         }
 

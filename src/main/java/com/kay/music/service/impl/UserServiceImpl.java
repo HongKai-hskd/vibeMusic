@@ -75,7 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     // @Cacheable 是方法级缓存触发，key 的核心是「唯一标识查询条件」
-    @Cacheable(key = "#userSearchDTO.pageNum + '-' + #userSearchDTO.pageSize + '-' + #userSearchDTO.username + '-' + #userSearchDTO.phone + '-' + #userSearchDTO.userStatus")
+    @Cacheable(key = "'user:list:' + #userSearchDTO.pageNum + '-' + #userSearchDTO.pageSize + '-' + #userSearchDTO.username + '-' + #userSearchDTO.phone + '-' + #userSearchDTO.userStatus", unless = "#result == null")
     public Result<PageResult<UserManagementVO>> getAllUsers(UserSearchDTO userSearchDTO) {
         // 1. 分页查询
         Page<User> page = new Page<>(userSearchDTO.getPageNum(), userSearchDTO.getPageSize());
@@ -98,6 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 5.1 返回结果 - 未查到
         if ( userPage.getRecords().size() == 0 ) {
+            // 没有查到结果，返回空结果（也会被缓存，防止缓存穿透）
             return Result.success(MessageConstant.DATA_NOT_FOUND , new PageResult<>(0L,null));
         }
         // 5.2 返回结果 - 封装结果
@@ -385,9 +386,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @date:   2025/11/19 11:42
      */
     @Override
+    @Cacheable(key = "'user:info:' + #root.methodName + '-' + T(com.kay.music.utils.ThreadLocalUtil).getUserId()", unless = "#result == null")
     public Result<UserVO> userInfo() {
         Long userId = ThreadLocalUtil.getUserId();
         User user = userMapper.selectById(userId);
+        if (user == null) {
+            // 没有查到用户，返回空结果（也会被缓存，防止缓存穿透）
+            return Result.success(MessageConstant.USER + MessageConstant.NOT_FOUND, null);
+        }
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         return Result.success(userVO);
