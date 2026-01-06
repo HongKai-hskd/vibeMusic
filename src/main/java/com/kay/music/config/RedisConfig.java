@@ -19,6 +19,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.Random;
 /**
  * @Author: Kay
  * @date:   2025/11/16 16:43
@@ -63,12 +64,23 @@ public class RedisConfig {
 
         // 配置缓存的序列化方式
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(6)) // 缓存过期时间 6 小时 , 如果直接使用的注解的话，默认就是按这个过期时间
+                .entryTtl(getRandomExpiration()) // 添加随机过期时间，防止缓存雪崩
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(stringSerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer));
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(cacheConfig)
                 .build();
+    }
+    
+    /**
+     * 获取随机过期时间（5-7小时之间的随机值）
+     * 这样可以防止大量缓存同时失效导致的缓存雪崩问题
+     * @return 随机Duration
+     */
+    private Duration getRandomExpiration() {
+        Random random = new Random();
+        long randomMinutes = 300 + random.nextInt(120); // 5小时 + 随机0-2小时
+        return Duration.ofMinutes(randomMinutes);
     }
 }
