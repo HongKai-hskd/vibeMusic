@@ -51,6 +51,11 @@ public class Result<T> {
     public static Result error(String message) {
         return new Result(400, message, null);
     }
+    
+    // 快速返回带指定数据类型的操作失败响应结果(带自定义提示信息 - 400 客户端错误)
+    public static <T> Result<T> error(String message, T data) {
+        return new Result<>(400, message, data);
+    }
 
     // 快速返回 404 未找到错误
     public static Result notFound(String message) {
