@@ -1,7 +1,6 @@
 package com.kay.music.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -93,8 +92,8 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     @Override
     @CacheEvict(cacheNames = "playlistCache", allEntries = true)
     public Result addPlaylist(PlaylistAddDTO playlistAddDTOO) {
-        QueryWrapper<Playlist> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("title", playlistAddDTOO.getTitle());
+        LambdaQueryWrapper<Playlist> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Playlist::getTitle, playlistAddDTOO.getTitle());
         if (playlistMapper.selectCount(queryWrapper) > 0) {
             return Result.error(MessageConstant.PLAYLIST + MessageConstant.ALREADY_EXISTS);
         }
@@ -143,7 +142,7 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
             return Result.error("只有歌单创建者或管理员才能修改歌单");
         }
 
-        Playlist playlistByTitle = playlistMapper.selectOne(new QueryWrapper<Playlist>().eq("title", playlistUpdateDTO.getTitle()));
+        Playlist playlistByTitle = playlistMapper.selectOne(new LambdaQueryWrapper<Playlist>().eq(Playlist::getTitle, playlistUpdateDTO.getTitle()));
         if (playlistByTitle != null && !playlistByTitle.getPlaylistId().equals(playlistId)) {
             return Result.error(MessageConstant.PLAYLIST + MessageConstant.ALREADY_EXISTS);
         }
@@ -290,10 +289,10 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     public Result<PageResult<PlaylistVO>> getAllPlaylists(PlaylistDTO playlistDTO) {
         // 分页查询
         Page<Playlist> page = new Page<>(playlistDTO.getPageNum(), playlistDTO.getPageSize());
-        QueryWrapper<Playlist> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Playlist> queryWrapper = new LambdaQueryWrapper<>();
         // 根据 playlistDTO 的条件构建查询条件
         if (playlistDTO.getTitle() != null) {
-            queryWrapper.like("title", playlistDTO.getTitle());
+            queryWrapper.like(Playlist::getTitle, playlistDTO.getTitle());
         }
 
         IPage<Playlist> playlistPage = playlistMapper.selectPage(page, queryWrapper);
@@ -349,18 +348,18 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
         Long userId = ThreadLocalUtil.getUserId();
         if ( userId != null ) {
             // 获取用户收藏的歌单
-            UserFavorite favoritePlaylist = userFavoriteMapper.selectOne(new QueryWrapper<UserFavorite>()
-                    .eq("user_id", userId)
-                    .eq("type", 1)
-                    .eq("playlist_id", playlistId));
+            UserFavorite favoritePlaylist = userFavoriteMapper.selectOne(new LambdaQueryWrapper<UserFavorite>()
+                    .eq(UserFavorite::getUserId, userId)
+                    .eq(UserFavorite::getType, 1)
+                    .eq(UserFavorite::getPlaylistId, playlistId));
             if (favoritePlaylist != null) {
                 playlistDetailVO.setLikeStatus(LikeStatusEnum.LIKE.getId());
             }
 
             // 获取用户收藏的歌曲
-            List<UserFavorite> favoriteSongs = userFavoriteMapper.selectList(new QueryWrapper<UserFavorite>()
-                    .eq("user_id", userId)
-                    .eq("type", 0));
+            List<UserFavorite> favoriteSongs = userFavoriteMapper.selectList(new LambdaQueryWrapper<UserFavorite>()
+                    .eq(UserFavorite::getUserId, userId)
+                    .eq(UserFavorite::getType, 0));
 
             // 获取用户收藏的歌曲 id
             Set<Long> favoriteSongIds = favoriteSongs.stream()

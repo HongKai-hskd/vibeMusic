@@ -1,18 +1,21 @@
 package com.kay.music.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kay.music.constant.MessageConstant;
 import com.kay.music.enumeration.LikeStatusEnum;
-import com.kay.music.mapper.*;
+import com.kay.music.mapper.ArtistMapper;
+import com.kay.music.mapper.SongMapper;
+import com.kay.music.mapper.UserFavoriteMapper;
 import com.kay.music.pojo.dto.SongAddDTO;
 import com.kay.music.pojo.dto.SongAndArtistDTO;
 import com.kay.music.pojo.dto.SongDTO;
 import com.kay.music.pojo.dto.SongUpdateDTO;
-import com.kay.music.pojo.entity.*;
+import com.kay.music.pojo.entity.Artist;
+import com.kay.music.pojo.entity.Song;
+import com.kay.music.pojo.entity.UserFavorite;
 import com.kay.music.pojo.vo.SongAdminVO;
 import com.kay.music.pojo.vo.SongDetailVO;
 import com.kay.music.pojo.vo.SongVO;
@@ -42,7 +45,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -222,11 +226,11 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
             return Result.error(MessageConstant.ADD + MessageConstant.FAILED);
         }
         // 获取刚插入的歌曲记录
-        Song songInDB = songMapper.selectOne(new QueryWrapper<Song>()
-                .eq("artist_id", songAddDTO.getArtistId())
-                .eq("name", songAddDTO.getSongName())
-                .eq("album", songAddDTO.getAlbum())
-                .orderByDesc("id")
+        Song songInDB = songMapper.selectOne(new LambdaQueryWrapper<Song>()
+                .eq(Song::getArtistId, songAddDTO.getArtistId())
+                .eq(Song::getSongName, songAddDTO.getSongName())
+                .eq(Song::getAlbum, songAddDTO.getAlbum())
+                .orderByDesc(Song::getSongId)
                 .last("LIMIT 1"));
 
         if (songInDB == null) {

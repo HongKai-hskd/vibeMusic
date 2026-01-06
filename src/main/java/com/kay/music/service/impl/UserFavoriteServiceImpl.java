@@ -1,6 +1,6 @@
 package com.kay.music.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -89,8 +89,8 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
     public Result collectSong(Long songId) {
         Long userId = ThreadLocalUtil.getUserId();
 
-        QueryWrapper<UserFavorite> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId).eq("type", 0).eq("song_id", songId);
+        LambdaQueryWrapper<UserFavorite> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserFavorite::getUserId, userId).eq(UserFavorite::getType, 0).eq(UserFavorite::getSongId, songId);
         if (userFavoriteMapper.selectCount(queryWrapper) > 0) {
             return Result.error(MessageConstant.ADD + MessageConstant.FAILED);
         }
@@ -114,8 +114,8 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
 
         Long userId = ThreadLocalUtil.getUserId();
 
-        QueryWrapper<UserFavorite> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId).eq("type", 0).eq("song_id", songId);
+        LambdaQueryWrapper<UserFavorite> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserFavorite::getUserId, userId).eq(UserFavorite::getType, 0).eq(UserFavorite::getSongId, songId);
         if (userFavoriteMapper.delete(queryWrapper) == 0) {
             return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
         }
@@ -164,8 +164,8 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
 
         Long userId = ThreadLocalUtil.getUserId();
 
-        QueryWrapper<UserFavorite> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId).eq("type", 1).eq("playlist_id", playlistId);
+        LambdaQueryWrapper<UserFavorite> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserFavorite::getUserId, userId).eq(UserFavorite::getType, 1).eq(UserFavorite::getPlaylistId, playlistId);
         if (userFavoriteMapper.selectCount(queryWrapper) > 0) {
             return Result.error(MessageConstant.ADD + MessageConstant.FAILED);
         }
@@ -188,8 +188,8 @@ public class UserFavoriteServiceImpl extends ServiceImpl<UserFavoriteMapper, Use
     public Result cancelCollectPlaylist(Long playlistId) {
         Long userId = ThreadLocalUtil.getUserId();
 
-        QueryWrapper<UserFavorite> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId).eq("type", 1).eq("playlist_id", playlistId);
+        LambdaQueryWrapper<UserFavorite> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserFavorite::getUserId, userId).eq(UserFavorite::getType, 1).eq(UserFavorite::getPlaylistId, playlistId);
         if (userFavoriteMapper.delete(queryWrapper) == 0) {
             return Result.error(MessageConstant.DELETE + MessageConstant.FAILED);
         }

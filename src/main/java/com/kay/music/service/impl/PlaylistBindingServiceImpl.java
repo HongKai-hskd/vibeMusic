@@ -2,15 +2,17 @@ package com.kay.music.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.mapper.PlaylistBindingMapper;
 import com.kay.music.mapper.PlaylistMapper;
 import com.kay.music.pojo.entity.Playlist;
 import com.kay.music.pojo.entity.PlaylistBinding;
-import com.kay.music.enumeration.RoleEnum;
 import com.kay.music.result.Result;
 import com.kay.music.service.IPlaylistBindingService;
 import com.kay.music.utils.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "playlistCache")
 public class PlaylistBindingServiceImpl extends ServiceImpl<PlaylistBindingMapper, PlaylistBinding> implements IPlaylistBindingService {
 
     private final PlaylistMapper playlistMapper;
 
     @Override
     @Transactional
+    @CacheEvict(key = "#playlistId")
     public Result addSongToPlaylist(Long playlistId, Long songId) {
         // 获取当前登录用户 ID
         Long currentUserId = ThreadLocalUtil.getUserId();
@@ -72,6 +76,7 @@ public class PlaylistBindingServiceImpl extends ServiceImpl<PlaylistBindingMappe
 
     @Override
     @Transactional
+    @CacheEvict(key = "#playlistId")
     public Result removeSongFromPlaylist(Long playlistId, Long songId) {
         // 获取当前登录用户 ID
         Long currentUserId = ThreadLocalUtil.getUserId();
