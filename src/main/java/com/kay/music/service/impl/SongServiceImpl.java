@@ -189,12 +189,11 @@ public class SongServiceImpl extends ServiceImpl<SongMapper, Song> implements IS
             unless = "#result == null"
     )
     public Result<PageResult<SongVO>> getAllSongsForUser(SongDTO songDTO, Long userId) {
-        // 使用逻辑过期机制
+        // 使用逻辑过期方式从缓存获取
         String cacheKey = RedisConstants.CACHE_SONG_KEY + "user:" + userId + ":" + 
                 songDTO.getPageNum() + ":" + songDTO.getPageSize() + ":" +
                 songDTO.getSongName() + ":" + songDTO.getArtistName() + ":" + songDTO.getAlbum();
                 
-        // 1. 从 Redis 查询缓存
         String json = stringRedisTemplate.opsForValue().get(cacheKey);
         
         // 2. 判断是否存在
