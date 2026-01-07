@@ -32,7 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/sendVerificationCode", "/user/resetUserPassword",
                         "/banner/getBannerList",
                         "/playlist/getAllPlaylists", "/playlist/getRecommendedPlaylists", "/playlist/getPlaylistDetail/**",
-                        "/artist/getAllArtists", "/artist/getArtistDetail/**",
+                        "/artist/getAllArtists", "/artist/getArtistDetail/**", "/artist/getRandomArtists",
                         "/song/getAllSongs", "/song/getRecommendedSongs", "/song/getSongDetail/**");
     }
 }
